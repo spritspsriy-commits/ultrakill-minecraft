@@ -43,6 +43,12 @@ Download the two files from the [Releases page](https://github.com/xandermodsstu
 
 ### Part 1: Minecraft
 
+Follow the steps for the launcher you play Minecraft with: **A** the official Minecraft Launcher, **B** the Modrinth App,
+or **C** the CurseForge app. In all three, the mod needs Minecraft **26.3** with **Fabric** and **Fabric API**. This mod's
+own file isn't on Modrinth or CurseForge, so with those apps you add it by hand.
+
+**A. With the Minecraft Launcher**
+
 1. Start the Minecraft Launcher and play Minecraft 26.3 once, then close it. That makes the game's folders.
 2. Download the **Fabric Installer** from [fabricmc.net/use/installer](https://fabricmc.net/use/installer/) and run
    it. On the **Client** tab, choose Minecraft version **26.3**, leave the loader at the newest version, and click
@@ -53,6 +59,32 @@ Download the two files from the [Releases page](https://github.com/xandermodsstu
    says it doesn't exist, open `%appdata%\.minecraft` instead and make a folder called `mods` there.
 5. Put both jars in the mods folder: Fabric API and `ukpassthrough-0.1.1.jar`.
 6. In the Minecraft Launcher, choose **fabric-loader-…-26.3** in the list next to the Play button.
+
+**B. With the Modrinth App**
+
+1. Install the [Modrinth App](https://modrinth.com/app), open it, and sign in with the Microsoft account you play
+   Minecraft with.
+2. Click **+** (create an instance) in the left-hand bar. Give it a name (for example "ULTRAKILL"), choose **Fabric**
+   as the loader and **26.3** as the game version, leave the loader version as it is, and click **Create**.
+3. Open the new instance and click **Add content** (in some versions **Install content**). Search for
+   **Fabric API** and click **Install**. The app picks the version for 26.3 by itself.
+4. Open the instance's folder: on the instance's page, click the **⋮** (three dots) button and choose
+   **Open folder**. Open the `mods` folder in it. If there's none, make a folder called `mods`.
+5. Put `ukpassthrough-0.1.1.jar` in that `mods` folder.
+6. Back in the app, click **Play** on the instance.
+
+**C. With the CurseForge app**
+
+1. Install the [CurseForge app](https://www.curseforge.com/download/app), open it, and choose **Minecraft**.
+2. Click **Create Custom Profile** (in some versions **+ Create**). Give it a name, choose **26.3** as the Minecraft
+   version and **Fabric** as the mod loader, leave the loader version as it is, and click **Create**.
+3. Open the new profile and click **Add More Content**. Search for **Fabric API** and click **Install**.
+4. Open the profile's folder: click the **⋮** (three dots) button next to **Play** and choose **Open Folder**.
+   Open the `mods` folder in it. If there's none, make a folder called `mods`.
+5. Put `ukpassthrough-0.1.1.jar` in that `mods` folder.
+6. Back in the app, click **Play** on the profile.
+
+The buttons' names can differ a little between versions of these apps. If one isn't there, look for the closest match.
 
 ### Part 2: ULTRAKILL
 
@@ -89,12 +121,14 @@ wise: copy the `Saves` folder in ULTRAKILL's game folder (the one from step B2) 
 
 1. Download both new files from the [Releases page](https://github.com/xandermodsstuff-dot/ultrakill-minecraft/releases/latest).
 2. In Minecraft's `mods` folder, **delete the old `ukpassthrough-….jar`** and put the new one in. With two of them
-   there, Minecraft won't start.
+   there, Minecraft won't start. With the Modrinth App or CurseForge, it's the `mods` folder of your instance or
+   profile (open it as in Part 1, step 4).
 3. Replace `UKPassthrough.dll` in `BepInEx\plugins` with the new one.
 
 ## Playing
 
-1. Start Minecraft with the Fabric version, and open or make a **single-player** world. The top left corner
+1. Start Minecraft with Fabric (the **fabric-loader** version in the Minecraft Launcher, or your instance or profile in
+   the Modrinth App or CurseForge), and open or make a **single-player** world. The top left corner
    says **"ULTRAKILL: waiting (127.0.0.1:25600)"** in gold.
 2. Start ULTRAKILL: **Start modded** in r2modman, or from Steam if you installed it by hand. Leave its main menu
    alone. The mod loads its own empty level as soon as it connects.
@@ -166,11 +200,18 @@ Esc, then **ULTRAKILL x Minecraft Settings**:
   and have the Revolver. Play ULTRAKILL without the mod until you have it, then try again. With r2modman, start
   ULTRAKILL from Steam instead of Start modded. If you installed by hand, take `UKPassthrough.dll` out of `plugins`
   first.
-- **Minecraft doesn't start.** Check that Fabric API is a version for 26.3 and that you picked the Fabric version in
-  the launcher. Minecraft's log is `%appdata%\.minecraft\logs\latest.log`.
-- **Something else on the PC already uses port 25600.** In the Minecraft Launcher, edit the Fabric installation,
-  open **More options** and add `-Dukpassthrough.port=25601` to the JVM arguments. Then set `Port = 25601` in
-  `BepInEx\config\dev.ukmc.ukpassthrough.cfg`, which appears after ULTRAKILL has started once with the plugin.
+- **Minecraft doesn't start.** Check that Fabric API is a version for 26.3, that you picked the Fabric version in the
+  launcher, and that there's only one `ukpassthrough-….jar` in the `mods` folder. Minecraft's log is `logs\latest.log`
+  in its game folder: `%appdata%\.minecraft` for the Minecraft Launcher, or your instance's or profile's folder in the
+  Modrinth App or CurseForge.
+- **Something else on the PC already uses port 25600.** Add `-Dukpassthrough.port=25601` to Minecraft's Java (JVM)
+  arguments:
+  - **Minecraft Launcher:** edit the Fabric installation and open **More options**.
+  - **Modrinth App:** the instance's settings, under **Java and memory**.
+  - **CurseForge:** the app's **Settings**, then **Minecraft**, then the Java settings' additional arguments.
+
+  Then set `Port = 25601` in `BepInEx\config\dev.ukmc.ukpassthrough.cfg`. That file appears after ULTRAKILL has started
+  once with the plugin.
 - **It runs slowly.** Turn on Potato Mode (or Super Potato Mode) in the settings menu.
 
 ### Reporting a bug
