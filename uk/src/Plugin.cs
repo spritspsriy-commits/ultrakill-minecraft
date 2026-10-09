@@ -10,7 +10,7 @@ namespace UKPassthrough
     {
         public const string Id = "dev.ukmc.ukpassthrough";
         public const string Name = "UKPassthrough";
-        public const string Version = "0.1.0";
+        public const string Version = "0.1.1";
 
         internal static ManualLogSource Log;
         internal static ConfigEntry<int> Port;

@@ -140,7 +140,9 @@ How a player installs and starts the mod is in the [README](../README.md). The d
   (`tools\setup_minecraft.py --loader <version> --mods <jars>` makes one);
 - an r2modman profile for ULTRAKILL called "UK Passthrough" with only BepInEx (BepInExPack 5.4.2100) and this
   plugin, in `%APPDATA%\r2modmanPlus-local\ULTRAKILL\profiles\UK Passthrough\`;
-- `tools\start-ultrakill.bat`, which starts ULTRAKILL through Steam with that profile's BepInEx.
+- `tools\start-ultrakill.bat`, which starts ULTRAKILL through Steam with that profile's BepInEx. Like r2modman's Start modded, it
+  first copies the profile's doorstop (`winhttp.dll`, `doorstop_config.ini`) into ULTRAKILL's folder when another profile's is there
+  (a profile with BepInEx 5.4.23 leaves Doorstop 4, which can't start this profile's BepInEx 5.4.21).
 
 The two games can start in either order. The ULTRAKILL plugin keeps trying to connect every second.
 
@@ -279,9 +281,12 @@ Minecraft 26.3 + Fabric (mc/)                         ULTRAKILL + BepInEx 5 (uk/
     on `GameProgressSaver.CheckGear`/`GetMoney`/`AddMoney`/`AddGear`, `ShopCategory.CheckGear`, `VariationInfo`), and each sale comes
     back as `spend`.
     ULTRAKILL's enemies' ground checks are kept honest on the blocks (`EnemyGround.cs`, after `GroundCheckEnemy.Start`), and the
-    Sandbox's navmesh is built for steps of a block (a patch after `NavMeshSurface.GetBuildSettings`) and, while they're about,
-    built again at most every 2 s when blocks near one of them change or one of them (or V1) nears its edge
-    (`SandboxTools.KeepNavmesh`; round 28b: rebuilding for every change hitched ULTRAKILL 60 to 100 ms every few seconds).
+    Sandbox's navmesh is built for steps of a block (a patch after `NavMeshSurface.GetBuildSettings`) and, while enemies that walk
+    on it (those with a `NavMeshAgent`) are about, built again at most every 2 s when blocks near one of them change or one of them
+    (or V1) nears its edge (`SandboxTools.KeepNavmesh`; round 28b: rebuilding for every change hitched ULTRAKILL 60 to 100 ms every
+    few seconds). Since round 31 its volume is fitted around V1 and those enemies (32 blocks beyond them sideways) at each build
+    instead of only growing, and fliers like Gabriel don't count: each build hitches the frame after it starts by how much it reads,
+    which during V2's and Gabriel's fights (their explosions change blocks) was 50 to 100 ms every 2 s; now about 5 to 8 ms.
   - Protocol 27 (round 29): `died` (V1 died: Minecraft drops the player's items as a death does, `Respawn.onDied` through the
     invoker for `LivingEntity.dropEquipment`, and the player picks nothing up until V1 comes back, `PlayerMixin.touch`); `player`
     carries `sky` (how many blocks the player could rise), and V1 falls in from up to 30 of them when a world opens, landing with
@@ -561,7 +566,7 @@ first, because it locks the plugin DLL. The pieces:
   installed ULTRAKILL (`-p:UltrakillDir=...`) and the profile's BepInEx (`-p:BepInExDir=...`); nothing from
   them is copied into this folder. Copy `uk\bin\Release\UKPassthrough.dll` to the profile's
   `BepInEx\plugins\UKPassthrough\`.
-- **Minecraft mod:** `cd mc` then `gradlew build` (JDK 25). The jar is `mc\build\libs\ukpassthrough-0.1.0.jar`.
+- **Minecraft mod:** `cd mc` then `gradlew build` (JDK 25). The jar is `mc\build\libs\ukpassthrough-0.1.1.jar`.
   - While maven.fabricmc.net is unreachable, build from the Gradle cache and the Fabric API jar in
     `mc\libs\fabric-api\` (from Modrinth):
     `gradlew build -Ploom_version=1.17.20 -Ploader_version=0.19.3 -PlocalFabricApi`

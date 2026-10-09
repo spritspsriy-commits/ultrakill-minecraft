@@ -15,7 +15,7 @@ Does what the Fabric installer does, from files it can verify:
 The launcher must be closed if the installation entry has to change (it rewrites launcher_profiles.json when
 it exits). The version file and the mods can be updated with the launcher open.
 
-    tools\\.venv\\Scripts\\python tools\\setup_minecraft.py --loader 0.19.3 --mods mc\\build\\libs\\ukpassthrough-0.1.0.jar mc\\libs\\fabric-api\\fabric-api-0.161.0+26.3.jar
+    tools\\.venv\\Scripts\\python tools\\setup_minecraft.py --loader 0.19.3 --mods mc\\build\\libs\\ukpassthrough-0.1.1.jar mc\\libs\\fabric-api\\fabric-api-0.161.0+26.3.jar
 """
 
 import argparse

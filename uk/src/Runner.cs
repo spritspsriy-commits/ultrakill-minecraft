@@ -108,7 +108,7 @@ namespace UKPassthrough
                     this.peerInfo = "Minecraft " + (string)m["mc"] + ", mod " + (string)m["mod"];
                     if ((int?)m["v"] != Link.Protocol)
                     {
-                        this.Show("The Minecraft mod speaks protocol " + (int?)m["v"] + ", this plugin " + Link.Protocol + ". Rebuild both.");
+                        this.Show("The Minecraft mod speaks protocol " + (int?)m["v"] + ", this plugin " + Link.Protocol + ". Install both files from the same release.");
                     }
 
                     this.arena.OnLinked();
@@ -272,7 +272,23 @@ namespace UKPassthrough
                             SandboxTools.NavmeshAlways = (int)m["navmesh"] != 0;
                         }
 
-                        Plugin.Log.LogInfo("lag: summaries every " + Lag.Every + " s, the navmesh kept up to date " + (SandboxTools.NavmeshAlways ? "always" : "only while enemies are about"));
+                        if (m["slow"] != null)
+                        {
+                            Lag.SlowMs = (double)m["slow"];
+                        }
+
+                        if (m["detail"] != null)
+                        {
+                            Lag.Detail = (int)m["detail"] != 0;
+                        }
+
+                        if (m["oldnavmesh"] != null)
+                        {
+                            SandboxTools.NavmeshOld = (int)m["oldnavmesh"] != 0;
+                        }
+
+                        Plugin.Log.LogInfo("lag: summaries every " + Lag.Every + " s, slow from " + Lag.SlowMs + " ms" + (Lag.Detail ? ", in detail" : "") + ", the navmesh kept up to date "
+                            + (SandboxTools.NavmeshAlways ? "always" : "only while enemies are about") + (SandboxTools.NavmeshOld ? " (round 30's way)" : "") + "; incremental garbage collection " + (UnityEngine.Scripting.GarbageCollector.isIncremental ? "on" : "off"));
                     }
                     else if ((string)m["what"] == "terminal")
                     {

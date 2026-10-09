@@ -16,7 +16,7 @@ weapons, the arms and the HUD. Minecraft supplies the world, the blocks and the 
 - **A settings menu** in Minecraft's pause menu: Progression Mode (earn P from experience and buy your guns), a
   Balance page, Safe Building, Potato Mode and more.
 
-> Status: **0.1.0, an early release.** It's played and tested, but expect bugs. Please report them (see
+> Status: **0.1.1, an early release.** It's played and tested, but expect bugs. Please report them (see
 > [Reporting a bug](#reporting-a-bug)).
 
 ## What you need
@@ -38,7 +38,7 @@ updated too.
 
 Download the two files from the [Releases page](https://github.com/xandermodsstuff-dot/ultrakill-minecraft/releases/latest):
 
-- `ukpassthrough-0.1.0.jar` is the **Minecraft** half.
+- `ukpassthrough-0.1.1.jar` is the **Minecraft** half.
 - `UKPassthrough.dll` is the **ULTRAKILL** half.
 
 ### Part 1: Minecraft
@@ -51,7 +51,7 @@ Download the two files from the [Releases page](https://github.com/xandermodsstu
    (open its **Versions** tab and pick one marked 26.3).
 4. Open your mods folder. Press **Windows key + R**, type `%appdata%\.minecraft\mods` and press Enter. If Windows
    says it doesn't exist, open `%appdata%\.minecraft` instead and make a folder called `mods` there.
-5. Put both jars in the mods folder: Fabric API and `ukpassthrough-0.1.0.jar`.
+5. Put both jars in the mods folder: Fabric API and `ukpassthrough-0.1.1.jar`.
 6. In the Minecraft Launcher, choose **fabric-loader-…-26.3** in the list next to the Play button.
 
 ### Part 2: ULTRAKILL
@@ -84,6 +84,13 @@ Then pick **A** or **B**. A keeps your normal ULTRAKILL untouched.
 **Your ULTRAKILL save:** the mod keeps its weapons, loadout and gun colours separately, and doesn't change your
 save. Settings you change in ULTRAKILL's own options menu are ULTRAKILL's real settings. A backup is still
 wise: copy the `Saves` folder in ULTRAKILL's game folder (the one from step B2) somewhere safe.
+
+### Updating to a new version
+
+1. Download both new files from the [Releases page](https://github.com/xandermodsstuff-dot/ultrakill-minecraft/releases/latest).
+2. In Minecraft's `mods` folder, **delete the old `ukpassthrough-….jar`** and put the new one in. With two of them
+   there, Minecraft won't start.
+3. Replace `UKPassthrough.dll` in `BepInEx\plugins` with the new one.
 
 ## Playing
 

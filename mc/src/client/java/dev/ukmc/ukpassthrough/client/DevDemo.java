@@ -281,11 +281,15 @@ import org.joml.Vector3f;
  * wall placed by the player under a rocket (on, then off), placed TNT (still set off), slams on a placed and a natural dirt pad, the
  * revolver on placed and natural glass, burning gasoline beside a placed pillar of planks and a natural one; P per experience, gun prices,
  * the Jackhammer as no pickaxe and as a netherite one, a husk's windup; the settings menu and the balance page pictured.
+ * <p>
+ * With UKPASSTHROUGH_DEMO=43: round 31, the stutter with V2 and Gabriel. Each boss fights V1 in survival on a stone field (V1 at 5%
+ * damage taken, strafing and firing) while ULTRAKILL logs its slow frames, garbage collections and allocations, with the navmesh kept
+ * as in round 30 and as since round 31.
  */
 final class DevDemo {
 	// List.of(...).contains(null) throws: without the variable (every normal start) the mod didn't load
 	private static final boolean ENABLED = System.getenv("UKPASSTHROUGH_DEMO") != null
-		&& List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42").contains(System.getenv("UKPASSTHROUGH_DEMO"));
+		&& List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43").contains(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean STAINS_AND_PARRIES = "2".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean LIGHT_AND_NETHER = "3".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean HUD_AND_HURT = "4".equals(System.getenv("UKPASSTHROUGH_DEMO"));
@@ -327,6 +331,7 @@ final class DevDemo {
 	private static final boolean ROUND29B = "40".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean ROUND29C = "41".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean ROUND30 = "42".equals(System.getenv("UKPASSTHROUGH_DEMO"));
+	private static final boolean ROUND31 = "43".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	/** Demo 16: the largest gap between Steve's yaw and the first-person item's lagging yaw while V1 turned, and when. */
 	private static float largestSway;
 	private static int largestSwayAt;
@@ -382,7 +387,7 @@ final class DevDemo {
 			step = -1;
 		}
 
-		if ((ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30) && minecraft.player != null && minecraft.player.isDeadOrDying() && minecraft.gui.screen() instanceof net.minecraft.client.gui.screens.DeathScreen) {
+		if ((ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31) && minecraft.player != null && minecraft.player.isDeadOrDying() && minecraft.gui.screen() instanceof net.minecraft.client.gui.screens.DeathScreen) {
 			// Steve died while the test world waited for ULTRAKILL (mobs at night): back to life first
 			minecraft.player.respawn();
 			minecraft.gui.setScreen(null);
@@ -398,7 +403,7 @@ final class DevDemo {
 				placed = true;
 				String command = String.format(Locale.ROOT, "tp @a 17.5 %d 182.5 -90 0", y);
 				server.execute(() -> server.getCommands().performPrefixedCommand(server.createCommandSourceStack().withSuppressedOutput(), command));
-				if (ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30) {
+				if (ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31) {
 					// nothing to kill Steve while the world waits for ULTRAKILL
 					server.execute(() -> server.getCommands().performPrefixedCommand(server.createCommandSourceStack().withSuppressedOutput(), "difficulty peaceful"));
 				}
@@ -418,9 +423,11 @@ final class DevDemo {
 
 		// a player at the keys, as far as Minecraft's lower frame rate for nobody playing goes (the script's input isn't real)
 		minecraft.getFramerateLimitTracker().onInputReceived();
-		if (STAINS_AND_PARRIES || LIGHT_AND_NETHER || HUD_AND_HURT || FIRE_AND_WHIPLASH || SPREAD_AND_RESPAWN || WATER_AND_PORTALS || OCEAN || THIRD_PERSON || FEEL_AND_LIGHT || EXPLOSIONS || RULES || PUNCHES || GROUND_AND_MOBS || INVENTORY_AND_HAND || BLOOD_AND_TURNING || PORTRAIT_AND_STRIKES || REACH_AND_LAUNCHES || PARRY_OTHERS || SANDBOX_ARM || ROUND18 || ROUND19 || ROUND20 || ROUND21 || ROUND22 || ROUND23 || ROUND24 || ROUND24B || ROUND24C || ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30) {
+		if (STAINS_AND_PARRIES || LIGHT_AND_NETHER || HUD_AND_HURT || FIRE_AND_WHIPLASH || SPREAD_AND_RESPAWN || WATER_AND_PORTALS || OCEAN || THIRD_PERSON || FEEL_AND_LIGHT || EXPLOSIONS || RULES || PUNCHES || GROUND_AND_MOBS || INVENTORY_AND_HAND || BLOOD_AND_TURNING || PORTRAIT_AND_STRIKES || REACH_AND_LAUNCHES || PARRY_OTHERS || SANDBOX_ARM || ROUND18 || ROUND19 || ROUND20 || ROUND21 || ROUND22 || ROUND23 || ROUND24 || ROUND24B || ROUND24C || ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31) {
 			punchWhenClose(minecraft, step);
-			if (ROUND30) {
+			if (ROUND31) {
+				round31(minecraft, step++);
+			} else if (ROUND30) {
 				aimTick();
 				round30(minecraft, step++);
 			} else if (ROUND29C) {
@@ -3025,6 +3032,101 @@ final class DevDemo {
 		int x = base.getX(), y = base.getY(), z = base.getZ();
 		command(minecraft, String.format(Locale.ROOT, "fill %d %d %d %d %d %d minecraft:stone", x - 3, y - 4, z - 4, x + 2, y - 1, z + 4));
 		command(minecraft, String.format(Locale.ROOT, "fill %d %d %d %d %d %d minecraft:air", x - 3, y, z - 4, x + 2, y + 5, z + 4));
+	}
+
+	/**
+	 * Demo 43 (round 31): the stutter with V2 and Gabriel. In survival on a stone field each boss fights V1 (ULTRAKILL's major assist
+	 * at 5% damage taken, so V1 lives through it) while V1 strafes, turns and fires the revolver; ULTRAKILL logs every frame over 12 ms
+	 * and, every 5 s, its garbage collections, the memory allocated and V1's health: 10 s with no enemy, then each boss 15 s with the
+	 * navmesh kept as in round 30 (every enemy, the volume only growing) and 15 s as since round 31.
+	 */
+	private static void round31(final Minecraft minecraft, final int at) {
+		V1State.Pose p = V1State.live();
+		if (at >= 40 && at < 1445) {
+			InputForwarder.mouse(0.5 * MOUSE_PER_DEGREE, 0.0);
+			// strafing left and right, a shot every half second
+			if (at % 60 == 0) {
+				InputForwarder.key(InputConstants.KEY_D, false);
+				InputForwarder.key(InputConstants.KEY_A, true);
+			} else if (at % 60 == 30) {
+				InputForwarder.key(InputConstants.KEY_A, false);
+				InputForwarder.key(InputConstants.KEY_D, true);
+			}
+
+			if (at % 10 == 0) {
+				InputForwarder.button(1, true);
+			} else if (at % 10 == 2) {
+				InputForwarder.button(1, false);
+			}
+		}
+
+		if (at >= 40 && at % 100 == 0) {
+			debug("assist", "label", "V1 at " + (at / 20) + " s", "", 0);
+		}
+
+		switch (at) {
+			case 0 -> {
+				command(minecraft, "gamemode survival @p");
+				command(minecraft, "time set noon");
+				command(minecraft, "weather clear");
+				command(minecraft, "difficulty peaceful");
+				command(minecraft, "kill @e[type=!minecraft:player,distance=..80]");
+				minecraft.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+				if (p != null) {
+					base = BlockPos.containing(p.fx(), p.fy() + 0.01, p.fz());
+					int x = base.getX(), y = base.getY(), z = base.getZ();
+					command(minecraft, String.format(Locale.ROOT, "fill %d %d %d %d %d %d minecraft:stone", x - 30, y - 1, z - 30, x + 30, y - 1, z + 30));
+					command(minecraft, String.format(Locale.ROOT, "fill %d %d %d %d %d %d minecraft:air", x - 30, y, z - 30, x + 30, y + 7, z + 30));
+					command(minecraft, String.format(Locale.ROOT, "fill %d %d %d %d %d %d minecraft:air", x - 30, y + 8, z - 30, x + 30, y + 15, z + 30));
+				}
+			}
+			case 1 -> debug("assist", "major", 1, "damage", 0.05);
+			case 20 -> debug("lag", "every", 5, "slow", 12);
+			case 21 -> debug("lag", "every", 5, "detail", 1);
+			// the revolver (ULTRAKILL starts with whatever was held last time)
+			case 30 -> InputForwarder.key(InputConstants.KEY_1, true);
+			case 32 -> InputForwarder.key(InputConstants.KEY_1, false);
+			case 40 -> log("10 s with no enemy: starts");
+			case 240 -> {
+				log("V2, the navmesh as in round 30: starts");
+				debug("lag", "every", 5, "oldnavmesh", 1);
+				if (base != null) {
+					ukSpawn("V2", base.getX() + 12.5, base.getY(), base.getZ() + 0.5, 90.0F, false);
+				}
+			}
+			case 540 -> {
+				log("V2, the navmesh as in round 31: starts");
+				debug("lag", "every", 5, "oldnavmesh", 0);
+			}
+			case 840 -> debug("clearenemies", "", 0, "", 0);
+			case 845 -> {
+				log("Gabriel, the navmesh as in round 30: starts");
+				debug("lag", "every", 5, "oldnavmesh", 1);
+				if (base != null) {
+					ukSpawn("Gabriel", base.getX() + 12.5, base.getY() + 2.0, base.getZ() + 0.5, 90.0F, false);
+				}
+			}
+			case 1145 -> {
+				log("Gabriel, the navmesh as in round 31: starts");
+				debug("lag", "every", 5, "oldnavmesh", 0);
+			}
+			case 1445 -> {
+				log("Gabriel: done");
+				InputForwarder.key(InputConstants.KEY_A, false);
+				InputForwarder.key(InputConstants.KEY_D, false);
+				InputForwarder.button(1, false);
+				debug("clearenemies", "", 0, "", 0);
+			}
+			case 1450 -> debug("assist", "major", 0, "damage", 1.0);
+			case 1470 -> {
+				debug("lag", "every", 10, "detail", 0);
+				command(minecraft, "difficulty normal");
+				log("finished");
+				finished = true;
+			}
+			default -> {
+			}
+		}
 	}
 
 	private static void round30(final Minecraft minecraft, final int at) {

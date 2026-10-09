@@ -56,10 +56,23 @@ namespace UKPassthrough
         /// <summary>Development ({"t":"debug","what":"lag","navmesh":0|1}): round 27's way, the navmesh built for every change after its first build, enemies or not.</summary>
         public static bool NavmeshAlways { get; set; }
 
+        /// <summary>
+        /// Development ({"t":"debug","what":"lag","oldnavmesh":1}): round 30's way, every enemy counted (fliers too) and the navmesh's
+        /// volume only growing, for comparing.
+        /// </summary>
+        public static bool NavmeshOld { get; set; }
+
         /// <summary>A navmesh build is running in the background (for <see cref="Lag"/>).</summary>
         public static bool NavmeshBusy => navmeshUpdate != null && !navmeshUpdate.isDone;
-        /// <summary>The navmesh covers at least this far around V1 (units) when it's rebuilt.</summary>
-        private const float NavmeshAround = 96f;
+        /// <summary>
+        /// The navmesh covers this far around V1 and the enemies that walk on it, sideways, when it's rebuilt (units; round 31: was at
+        /// least 96 around V1, the volume only growing), and this far below and above them.
+        /// </summary>
+        private const float NavmeshAround = 64f;
+        private const float NavmeshBelow = 32f;
+        private const float NavmeshAbove = 48f;
+        /// <summary>Round 30's: the navmesh covered at least this far around V1, its volume only growing (<see cref="NavmeshOld"/>).</summary>
+        private const float OldNavmeshAround = 96f;
         /// <summary>How often a carried mob's place goes to Minecraft.</summary>
         private const float CarryEvery = 0.02f;
         /// <summary>A thrown mob flies at most this fast (units a second).</summary>
@@ -330,11 +343,15 @@ namespace UKPassthrough
         }
 
         /// <summary>
-        /// Every frame while V1 plays: while ULTRAKILL's own enemies are about (spawned with the arm), the Sandbox's navmesh is built
-        /// over Minecraft's blocks (it collects the physics colliders on the Environment layer in its volume, which is grown to take in
-        /// V1's surroundings), and built again when blocks near an enemy have changed or V1 has moved on (<see cref="NavmeshNear"/>,
-        /// <see cref="NavmeshMoveOn"/>), at most every <see cref="NavmeshRebuildEvery"/> seconds and not while the last is still
-        /// building. The first time with ULTRAKILL's own Rebake (about 60 ms on this PC), after that in the background
+        /// Every frame while V1 plays: while ULTRAKILL's own enemies that walk on the navmesh are about (spawned with the arm), the
+        /// Sandbox's navmesh is built over Minecraft's blocks (it collects the physics colliders on the Environment layer in its volume,
+        /// which is fitted around V1 and those enemies), and built again when blocks near one of them have changed or one has come near
+        /// the volume's edge (<see cref="NavmeshNear"/>, <see cref="NavmeshEdge"/>), at most every <see cref="NavmeshRebuildEvery"/>
+        /// seconds and not while the last is still building. Round 31 (the user's "little stutter when fighting an ultrakill boss", V2
+        /// and Gabriel): each build hitches the frame after it starts, by how much it has to read (10 ms for 240 sections with nothing
+        /// new, 50 to 100 ms with fresh sections or craters), and their explosions made one every 2 s. Gabriel and the other fliers
+        /// have no agent and never use it, so they no longer count; and the volume, which only grew, took in every section around
+        /// wherever V1 had been and every new one arriving at the edge of Minecraft's area. The first time with ULTRAKILL's own Rebake (about 60 ms on this PC), after that in the background
         /// (NavMeshSurface.UpdateNavMesh, which redoes only the tiles whose blocks changed). An enemy spawned where the navmesh is out of
         /// date falls or is lifted out of blocks (<see cref="EnemyGround"/>) until it's built again. Built for steps of a block
         /// (<see cref="StepClimb"/>).
@@ -360,7 +377,7 @@ namespace UKPassthrough
             EnemiesAbout.Clear();
             foreach (EnemyIdentifier eid in tracker.enemies)
             {
-                if (eid != null && !eid.dead && eid.GetComponent<StandIn>() == null)
+                if (eid != null && !eid.dead && eid.GetComponent<StandIn>() == null && (NavmeshOld || eid.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>(true) != null))
                 {
                     EnemiesAbout.Add(eid.transform.position);
                 }
@@ -383,8 +400,16 @@ namespace UKPassthrough
 
             blocks.ChangedSections.Clear();
             navmeshStale = false;
-            navmesh.EnsurePositionWithinBounds(at + new Vector3(NavmeshAround, NavmeshAround / 2f, NavmeshAround));
-            navmesh.EnsurePositionWithinBounds(at - new Vector3(NavmeshAround, NavmeshAround / 2f, NavmeshAround));
+            if (NavmeshOld || surface == null)
+            {
+                navmesh.EnsurePositionWithinBounds(at + new Vector3(OldNavmeshAround, OldNavmeshAround / 2f, OldNavmeshAround));
+                navmesh.EnsurePositionWithinBounds(at - new Vector3(OldNavmeshAround, OldNavmeshAround / 2f, OldNavmeshAround));
+            }
+            else
+            {
+                FitVolume(surface, at);
+            }
+
             var watch = System.Diagnostics.Stopwatch.StartNew();
             bool first = navmeshBuilds < 0 || surface == null || surface.navMeshData == null;
             navmeshClimbBuilt = BlockSteps;
@@ -399,12 +424,56 @@ namespace UKPassthrough
             }
 
             Plugin.Log.LogInfo("navmesh: " + (first ? "built" : "rebuilding in the background") + " over Minecraft's blocks for ULTRAKILL's enemies (" + watch.ElapsedMilliseconds + " ms here"
-                + (surface != null ? ", steps up to " + (surface.GetBuildSettings().agentClimb / Coords.Scale).ToString("0.0#") + " blocks" : "") + ")");
+                + (surface != null ? ", steps up to " + (surface.GetBuildSettings().agentClimb / Coords.Scale).ToString("0.0#") + " blocks" : "") + ")" + (Lag.Detail ? Sources(surface) : ""));
             navmeshBuilds = blocks.Builds;
             lastNavmeshBuild = Time.unscaledTime;
         }
 
-        /// <summary>Whether V1 or one of ULTRAKILL's enemies is within <see cref="NavmeshEdge"/> of the navmesh's edge (sideways), or outside it.</summary>
+        /// <summary>Development (<see cref="Lag.Detail"/>): the navmesh's volume and what it's built from.</summary>
+        private static string Sources(Unity.AI.Navigation.NavMeshSurface surface)
+        {
+            if (surface == null)
+            {
+                return "";
+            }
+
+            var sources = HarmonyLib.Traverse.Create(surface).Method("CollectSources").GetValue<List<UnityEngine.AI.NavMeshBuildSource>>();
+            int meshes = 0;
+            long vertices = 0;
+            foreach (UnityEngine.AI.NavMeshBuildSource source in sources ?? new List<UnityEngine.AI.NavMeshBuildSource>())
+            {
+                if (source.shape == UnityEngine.AI.NavMeshBuildSourceShape.Mesh && source.sourceObject is Mesh mesh)
+                {
+                    meshes++;
+                    vertices += mesh.vertexCount;
+                }
+            }
+
+            return "; volume " + surface.size.ToString("0") + ", " + (sources?.Count ?? 0) + " sources, " + meshes + " of them meshes with " + vertices + " vertices";
+        }
+
+        /// <summary>The navmesh's volume: the box around V1 and the enemies that walk on it, <see cref="NavmeshAround"/> beyond them sideways.</summary>
+        private static void FitVolume(Unity.AI.Navigation.NavMeshSurface surface, Vector3 v1)
+        {
+            Vector3 min = v1;
+            Vector3 max = v1;
+            foreach (Vector3 enemy in EnemiesAbout)
+            {
+                min = Vector3.Min(min, enemy);
+                max = Vector3.Max(max, enemy);
+            }
+
+            min -= new Vector3(NavmeshAround, NavmeshBelow, NavmeshAround);
+            max += new Vector3(NavmeshAround, NavmeshAbove, NavmeshAround);
+            // ULTRAKILL's own Sandbox keeps the volume unrotated, its centre relative to the object (as EnsurePositionWithinBounds does)
+            surface.center = (min + max) / 2f - surface.transform.position;
+            surface.size = max - min;
+        }
+
+        /// <summary>
+        /// Whether V1 or one of ULTRAKILL's enemies that walk on the navmesh is within <see cref="NavmeshEdge"/> of the navmesh's edge
+        /// sideways (or half that from its bottom or top), or outside it.
+        /// </summary>
         private static bool NearEdge(Unity.AI.Navigation.NavMeshSurface surface, Vector3 v1)
         {
             if (surface == null)
@@ -413,8 +482,8 @@ namespace UKPassthrough
             }
 
             Vector3 middle = surface.transform.position + surface.center;
-            Vector3 half = surface.size / 2f - new Vector3(NavmeshEdge, 0f, NavmeshEdge);
-            bool Out(Vector3 p) => Mathf.Abs(p.x - middle.x) > half.x || Mathf.Abs(p.z - middle.z) > half.z;
+            Vector3 half = surface.size / 2f - new Vector3(NavmeshEdge, NavmeshOld ? -1e6f : NavmeshEdge / 2f, NavmeshEdge);
+            bool Out(Vector3 p) => Mathf.Abs(p.x - middle.x) > half.x || Mathf.Abs(p.y - middle.y) > half.y || Mathf.Abs(p.z - middle.z) > half.z;
             if (Out(v1))
             {
                 return true;

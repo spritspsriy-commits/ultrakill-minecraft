@@ -29,8 +29,12 @@ if ($Only -ne 'uk') {
         if ($LASTEXITCODE -ne 0) { throw "Minecraft mod build failed ($LASTEXITCODE)" }
     } finally { Pop-Location }
     if (-not $NoInstall) {
-        New-Item -ItemType Directory -Force (Join-Path $mcGame 'mods') | Out-Null
-        Copy-Item (Join-Path $root 'mc\build\libs\ukpassthrough-0.1.0.jar') (Join-Path $mcGame 'mods') -Force
+        $version = ((Get-Content (Join-Path $root 'mc\gradle.properties')) -match '^version=' | Select-Object -First 1).Split('=')[1].Trim()
+        $mods = Join-Path $mcGame 'mods'
+        New-Item -ItemType Directory -Force $mods | Out-Null
+        # an older version's jar left beside the new one stops Fabric (the same mod twice)
+        Get-ChildItem $mods -Filter 'ukpassthrough-*.jar' | Where-Object { $_.Name -ne "ukpassthrough-$version.jar" } | Remove-Item -Force
+        Copy-Item (Join-Path $root "mc\build\libs\ukpassthrough-$version.jar") $mods -Force
         Write-Host "installed the Minecraft mod in $mcGame\mods"
     }
 }

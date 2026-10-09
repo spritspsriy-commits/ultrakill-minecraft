@@ -234,7 +234,7 @@ public final class UkLink extends WebSocketServer {
 		int v = m.has("v") ? m.get("v").getAsInt() : 0;
 		if (v != PROTOCOL) {
 			UKPassthrough.LOG.warn("ULTRAKILL plugin speaks protocol {}, this mod speaks {}", v, PROTOCOL);
-			chat("§cULTRAKILL plugin version doesn't match this mod (protocol " + v + " vs " + PROTOCOL + "). Rebuild both.");
+			chat("§cULTRAKILL plugin version doesn't match this mod (protocol " + v + " vs " + PROTOCOL + "). Install both files from the same release.");
 		}
 
 		WebSocket old = this.peer;
