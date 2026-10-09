@@ -34,7 +34,7 @@ updated too.
 
 ## Installing
 
-Download the two files from the [Releases page](../../releases/latest):
+Download the two files from the [Releases page](https://github.com/xandermodsstuff-dot/ultrakill-minecraft/releases/latest):
 
 - `ukpassthrough-0.1.0.jar` is the **Minecraft** half.
 - `UKPassthrough.dll` is the **ULTRAKILL** half.
@@ -158,7 +158,7 @@ Esc, then **ULTRAKILL x Minecraft Settings**:
 
 ### Reporting a bug
 
-Open an [issue](../../issues) and say what you did and what went wrong. Attach both logs:
+Open an [issue](https://github.com/xandermodsstuff-dot/ultrakill-minecraft/issues) and say what you did and what went wrong. Attach both logs:
 Minecraft's `logs\latest.log` and ULTRAKILL's `BepInEx\LogOutput.log`.
 
 ## Building it yourself
