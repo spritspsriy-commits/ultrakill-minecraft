@@ -25,6 +25,8 @@ weapons, the arms and the HUD. Minecraft supplies the world, the blocks and the 
 - **Minecraft: Java Edition 26.3** with **Fabric Loader** 0.19.3 or newer and **Fabric API** for 26.3.
 - **ULTRAKILL** on Steam with **BepInEx 5**. It was tested with the Steam version of October 2026 (build
   22957324).
+- **An ULTRAKILL save that has finished the tutorial and has the Revolver**, the first pistol. Without it, the mod
+  doesn't work properly. See the start of [Part 2](#part-2-ultrakill).
 - A PC that can run both games at once. Potato Mode in the settings helps on slower PCs.
 - **Single-player only.** The two games talk to each other only on your own PC (address 127.0.0.1); nothing goes
   over the internet.
@@ -54,7 +56,11 @@ Download the two files from the [Releases page](https://github.com/xandermodsstu
 
 ### Part 2: ULTRAKILL
 
-Pick **A** or **B**. A keeps your normal ULTRAKILL untouched.
+**First, play the tutorial.** If you haven't already, start ULTRAKILL from Steam as usual and play through its
+tutorial until you have the **Revolver**, the first pistol. The mod needs a save that has it. Do this before you
+install anything below.
+
+Then pick **A** or **B**. A keeps your normal ULTRAKILL untouched.
 
 **A. With a mod manager (recommended)**
 
@@ -149,6 +155,10 @@ Esc, then **ULTRAKILL x Minecraft Settings**:
 - **The corner line stays gold ("ULTRAKILL: waiting").** ULTRAKILL isn't running with the plugin. With r2modman,
   start it with **Start modded** and the right profile. Check that `UKPassthrough.dll` is in `BepInEx\plugins`.
   BepInEx's log, `BepInEx\LogOutput.log`, should mention UKPassthrough.
+- **Weapons are missing, or things don't work properly.** Your ULTRAKILL save needs to have finished the tutorial
+  and have the Revolver. Play ULTRAKILL without the mod until you have it, then try again. With r2modman, start
+  ULTRAKILL from Steam instead of Start modded. If you installed by hand, take `UKPassthrough.dll` out of `plugins`
+  first.
 - **Minecraft doesn't start.** Check that Fabric API is a version for 26.3 and that you picked the Fabric version in
   the launcher. Minecraft's log is `%appdata%\.minecraft\logs\latest.log`.
 - **Something else on the PC already uses port 25600.** In the Minecraft Launcher, edit the Fabric installation,
