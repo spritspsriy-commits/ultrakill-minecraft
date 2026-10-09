@@ -1,0 +1,71 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+repositories {
+	mavenCentral()
+}
+
+if (project.hasProperty("localFabricApi")) {
+	// fallback build: only ask Fabric's maven for Fabric's own packages (already in the Gradle cache), so an
+	// unreachable maven.fabricmc.net doesn't block Minecraft's libraries or Java-WebSocket
+	repositories.withType(MavenArtifactRepository).matching { it.url.host == "maven.fabricmc.net" }.configureEach { repo ->
+		repo.content {
+			includeGroupByRegex "net\\.fabricmc.*"
+			includeGroup "io.github.llamalad7"
+		}
+	}
+}
+
+loom {
+	splitEnvironmentSourceSets()
+	mods {
+		"ukpassthrough" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+	runs {
+		// dev client: a fixed window size so the camera/projection maths is easy to check
+		client {
+			programArgs "--width", "1280", "--height", "720"
+			// opens (or creates) a test world by itself, so a test run needs no clicks
+			vmArgs "--enable-native-access=ALL-UNNAMED", "-Dukpassthrough.devWorld=ukdev"
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	if (project.hasProperty("localFabricApi")) {
+		// fallback for when maven.fabricmc.net can't be reached: the Fabric API jar from Modrinth in libs/fabric-api,
+		// its modules (unpacked from META-INF/jars) to compile against, and the whole jar at runtime
+		compileOnly fileTree("libs/fabric-api/nested") { include "*.jar" }
+		runtimeOnly files("libs/fabric-api/fabric-api-${project.fabric_api_version}.jar")
+	} else {
+		implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	}
+	// WebSocket server the ULTRAKILL plugin connects to
+	implementation "org.java-websocket:Java-WebSocket:1.6.0"
+	include "org.java-websocket:Java-WebSocket:1.6.0"
+}
+
+jar {
+	// the mod's license, and the notice for the bundled Java-WebSocket (its own jar doesn't carry one)
+	from("../LICENSE") { rename { "${it}_ukpassthrough" } }
+	from("../THIRD_PARTY_NOTICES.md")
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+	filesMatching("fabric.mod.json") { expand "version": version }
+}
+
+tasks.withType(JavaCompile).configureEach { it.options.release = 25 }
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}

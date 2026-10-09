@@ -1,0 +1,7 @@
+{
+	"required": true,
+	"package": "dev.ukmc.ukpassthrough.client.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": ["AbstractContainerScreenAccessor", "AbstractContainerScreenMixin", "BossHealthOverlayAccessor", "CameraMixin", "ChunkSectionsToRenderInvoker", "ClientLevelMixin", "ClientPacketListenerMixin", "CreativeModeInventoryScreenInvoker", "GameRendererMixin", "GuiGraphicsExtractorAccessor", "GuiMixin", "InventoryScreenMixin", "ItemStackRenderStateAccessor", "KeyboardHandlerMixin", "KeyMappingAccessor", "LayerRenderStateAccessor", "LevelRendererMixin", "LivingEntityRendererMixin", "LivingEntityRenderStateMixin", "LocalPlayerMixin", "MinecraftMixin", "MouseHandlerAccessor", "MouseHandlerMixin", "RenderPipelinesAccessor", "SpriteContentsAccessor", "ToastManagerMixin"],
+	"injectors": { "defaultRequire": 1 }
+}

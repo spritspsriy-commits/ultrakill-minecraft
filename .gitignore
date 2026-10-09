@@ -1,0 +1,31 @@
+# the separate Minecraft game folder (worlds, logs, options)
+game/
+
+# Python test tools
+tools/.venv/
+__pycache__/
+
+# C# build output
+uk/bin/
+uk/obj/
+
+# Gradle build output, caches and the dev client's folder (worlds, logs)
+mc/build/
+mc/.gradle/
+mc/run/
+# the Fabric API jar from Modrinth for the fallback build (download it again if needed; see docs/HOW-IT-WORKS.md)
+mc/libs/
+
+# release files are uploaded to GitHub Releases, not committed
+release/
+
+# work notes kept on this PC only
+CLAUDE.md
+PLAN.md
+PROGRESS.md
+.claude/
+
+# editors
+.idea/
+.vscode/
+*.iml

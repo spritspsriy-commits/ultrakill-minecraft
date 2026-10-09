@@ -1,0 +1,7 @@
+# text files are stored with LF and checked out as the platform likes, except the scripts that need one kind
+* text=auto
+gradlew text eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.jar binary
+*.png binary

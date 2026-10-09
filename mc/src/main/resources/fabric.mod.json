@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "ukpassthrough",
+	"version": "${version}",
+	"name": "ULTRAKILL Passthrough",
+	"description": "Runs alongside ULTRAKILL: you play V1 in a Minecraft world. ULTRAKILL supplies movement, weapons, arms and HUD; Minecraft supplies the world, blocks and mobs.",
+	"authors": [
+		"xandermodsstuff-dot"
+	],
+	"contact": {
+		"homepage": "https://github.com/xandermodsstuff-dot/ultrakill-minecraft",
+		"sources": "https://github.com/xandermodsstuff-dot/ultrakill-minecraft",
+		"issues": "https://github.com/xandermodsstuff-dot/ultrakill-minecraft/issues"
+	},
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"dev.ukmc.ukpassthrough.UKPassthrough"
+		],
+		"client": [
+			"dev.ukmc.ukpassthrough.client.UKPassthroughClient"
+		]
+	},
+	"mixins": [
+		"ukpassthrough.mixins.json",
+		{
+			"config": "ukpassthrough.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
