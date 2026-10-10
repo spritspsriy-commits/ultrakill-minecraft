@@ -113,6 +113,11 @@ namespace UKPassthrough
                     }
                 }
 
+                if (Arena.Current != null)
+                {
+                    sb.Append("; blocks: " + Arena.Current.Blocks.Stats());
+                }
+
                 Plugin.Log.LogInfo(sb.ToString());
                 frames = 0;
                 slow = 0;

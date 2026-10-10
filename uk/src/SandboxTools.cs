@@ -69,6 +69,8 @@ namespace UKPassthrough
         /// least 96 around V1, the volume only growing), and this far below and above them.
         /// </summary>
         private const float NavmeshAround = 64f;
+        /// <summary>Enemies farther than this from V1 sideways (units, 96 blocks: past Minecraft's blocks) don't count for the navmesh.</summary>
+        private const float EnemyRange = 192f;
         private const float NavmeshBelow = 32f;
         private const float NavmeshAbove = 48f;
         /// <summary>Round 30's: the navmesh covered at least this far around V1, its volume only growing (<see cref="NavmeshOld"/>).</summary>
@@ -377,7 +379,9 @@ namespace UKPassthrough
             EnemiesAbout.Clear();
             foreach (EnemyIdentifier eid in tracker.enemies)
             {
-                if (eid != null && !eid.dead && eid.GetComponent<StandIn>() == null && (NavmeshOld || eid.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>(true) != null))
+                // not one held for want of blocks, nor one far from V1 (round 32: one falling out of the world took the volume 3,951 units down)
+                if (eid != null && !eid.dead && eid.GetComponent<StandIn>() == null && (NavmeshOld || eid.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>(true) != null)
+                    && (NavmeshOld || (!EnemyKeeper.IsHeld(eid) && Near(eid.transform.position, player.transform.position))))
                 {
                     EnemiesAbout.Add(eid.transform.position);
                 }
@@ -450,6 +454,13 @@ namespace UKPassthrough
             }
 
             return "; volume " + surface.size.ToString("0") + ", " + (sources?.Count ?? 0) + " sources, " + meshes + " of them meshes with " + vertices + " vertices";
+        }
+
+        /// <summary>Whether an enemy is near enough V1 to count for the navmesh (<see cref="EnemyRange"/>, half that up and down).</summary>
+        private static bool Near(Vector3 enemy, Vector3 v1)
+        {
+            Vector3 d = enemy - v1;
+            return Mathf.Abs(d.y) < EnemyRange / 2f && new Vector2(d.x, d.z).magnitude < EnemyRange;
         }
 
         /// <summary>The navmesh's volume: the box around V1 and the enemies that walk on it, <see cref="NavmeshAround"/> beyond them sideways.</summary>
@@ -536,6 +547,50 @@ namespace UKPassthrough
                 settings.agentClimb = StepClimb;
             }
         }
+
+        /// <summary>
+        /// The patch after NavMeshSurface.CollectSources: for the Sandbox's navmesh, each section of Minecraft's blocks counts only with its
+        /// faces that look up or down (<see cref="BlockWorld.NavSource"/>), and one without any doesn't count. Floors and the headroom over
+        /// them are all a navmesh takes from blocks (a wall shows as the floor beside it ending); in the Nether the walls were most of what
+        /// each rebuild read, and its first frame took up to 54 ms there with a boss about (round 32). Development
+        /// ({"t":"debug","what":"lag","navfaces":0}): the whole colliders, as before.
+        /// </summary>
+        public static void NavSources(Unity.AI.Navigation.NavMeshSurface surface, List<UnityEngine.AI.NavMeshBuildSource> sources)
+        {
+            Arena arena = Arena.Current;
+            if (!NavFaces || sources == null || arena == null || !arena.InSandbox)
+            {
+                return;
+            }
+
+            SandboxNavmesh navmesh = MonoSingleton<SandboxNavmesh>.Instance;
+            if (navmesh == null || HarmonyLib.Traverse.Create(navmesh).Field("surface").GetValue<Unity.AI.Navigation.NavMeshSurface>() != surface)
+            {
+                return;
+            }
+
+            for (int i = sources.Count - 1; i >= 0; i--)
+            {
+                UnityEngine.AI.NavMeshBuildSource source = sources[i];
+                Mesh faces = source.shape == UnityEngine.AI.NavMeshBuildSourceShape.Mesh ? arena.Blocks.NavSource(source.component) : null;
+                if (faces == null)
+                {
+                    continue;
+                }
+
+                if (faces.vertexCount == 0)
+                {
+                    sources.RemoveAt(i);
+                    continue;
+                }
+
+                source.sourceObject = faces;
+                sources[i] = source;
+            }
+        }
+
+        /// <summary>Development ({"t":"debug","what":"lag","navfaces":0|1}): the navmesh reads only the blocks' faces that look up or down (the default).</summary>
+        public static bool NavFaces { get; set; } = true;
 
         /// <summary>
         /// Development ({"t":"debug","what":"spawn","name":"Filth","p":[x,y,z],"yaw":degrees}, Minecraft's place and yaw): one of

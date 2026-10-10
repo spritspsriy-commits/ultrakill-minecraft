@@ -287,8 +287,14 @@ namespace UKPassthrough
                             SandboxTools.NavmeshOld = (int)m["oldnavmesh"] != 0;
                         }
 
+                        if (m["navfaces"] != null)
+                        {
+                            SandboxTools.NavFaces = (int)m["navfaces"] != 0;
+                        }
+
                         Plugin.Log.LogInfo("lag: summaries every " + Lag.Every + " s, slow from " + Lag.SlowMs + " ms" + (Lag.Detail ? ", in detail" : "") + ", the navmesh kept up to date "
-                            + (SandboxTools.NavmeshAlways ? "always" : "only while enemies are about") + (SandboxTools.NavmeshOld ? " (round 30's way)" : "") + "; incremental garbage collection " + (UnityEngine.Scripting.GarbageCollector.isIncremental ? "on" : "off"));
+                            + (SandboxTools.NavmeshAlways ? "always" : "only while enemies are about") + (SandboxTools.NavmeshOld ? " (round 30's way)" : "")
+                            + (SandboxTools.NavFaces ? "" : " from the blocks' whole colliders") + "; incremental garbage collection " + (UnityEngine.Scripting.GarbageCollector.isIncremental ? "on" : "off"));
                     }
                     else if ((string)m["what"] == "terminal")
                     {
@@ -323,6 +329,10 @@ namespace UKPassthrough
                     else if ((string)m["what"] == "clearenemies")
                     {
                         SandboxTools.ClearEnemies();
+                    }
+                    else if ((string)m["what"] == "bossray")
+                    {
+                        EnemyKeeper.ProbeBossRay();
                     }
                     else if ((string)m["what"] == "targets")
                     {

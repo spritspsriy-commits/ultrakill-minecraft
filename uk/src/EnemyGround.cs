@@ -82,8 +82,10 @@ namespace UKPassthrough
 
         /// <summary>
         /// An enemy whose feet are inside a full block (a navmesh from before blocks were placed there put it there, or a block came
-        /// onto it) is lifted onto the first two free blocks above, as Minecraft pushes a mob out of blocks: inside them nothing holds
-        /// it (the blocks are only their outer faces here), and the demo's Filth fell out of the world.
+        /// onto it) is put in the nearest two free blocks above or below, as Minecraft pushes a mob out of blocks: inside them nothing
+        /// holds it (the blocks are only their outer faces here), and the demo's Filth fell out of the world. Round 32: always above, Sisyphus
+        /// Prime, teleporting into the Nether's rock ceiling over V1, was lifted 13 blocks onto the Nether's roof; a boss that walks would
+        /// have stayed up there.
         /// </summary>
         private static void LiftOutOfBlocks(BlockWorld blocks, GroundCheckEnemy check)
         {
@@ -101,17 +103,26 @@ namespace UKPassthrough
                 return;
             }
 
-            int to = y + 1;
-            while (to < y + 64 && (blocks.FullAt(x, to, z) || blocks.FullAt(x, to + 1, z)))
+            int up = y + 1;
+            while (up < y + 64 && (blocks.FullAt(x, up, z) || blocks.FullAt(x, up + 1, z)))
             {
-                to++;
+                up++;
             }
 
-            if (to >= y + 64)
+            // below: the first two free blocks under the solid ones it's in (it falls from there onto whatever is under them)
+            int down = y - 2;
+            while (down > y - 64 && (blocks.FullAt(x, down, z) || blocks.FullAt(x, down + 1, z) || !blocks.Has(new Vector3Int(x >> 4, down >> 4, z >> 4))))
+            {
+                down--;
+            }
+
+            bool upFound = up < y + 64, downFound = down > y - 64;
+            if (!upFound && !downFound)
             {
                 return;
             }
 
+            int to = upFound && (!downFound || up - y <= y - down) ? up : down;
             Vector3 at = t.position + Vector3.up * ((to - (float)fy + 0.1f) * Coords.Scale + 0.05f);
             NavMeshAgent agent = eid.GetComponentInChildren<NavMeshAgent>();
             Rigidbody rb = eid.GetComponent<Rigidbody>();
@@ -137,7 +148,7 @@ namespace UKPassthrough
                 }
             }
 
-            Plugin.Log.LogInfo("enemy ground: " + eid.enemyType + "'s feet were inside a block at " + x + " " + y + " " + z + ": lifted out on top at " + to);
+            Plugin.Log.LogInfo("enemy ground: " + eid.enemyType + "'s feet were inside a block at " + x + " " + y + " " + z + ": put in the free space " + (to > y ? "above" : "below") + ", at " + to);
         }
 
         /// <summary>A new Sandbox: its enemies went with the old one.</summary>

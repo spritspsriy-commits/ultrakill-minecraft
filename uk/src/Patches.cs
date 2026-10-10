@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using HarmonyLib;
 using Sandbox.Arm;
 using ULTRAKILL.Cheats;
@@ -168,6 +169,49 @@ namespace UKPassthrough
         private static class NavmeshSteps
         {
             private static void Postfix(Unity.AI.Navigation.NavMeshSurface __instance, ref UnityEngine.AI.NavMeshBuildSettings __result) => SandboxTools.BuildSettings(__instance, ref __result);
+        }
+
+        /// <summary>
+        /// Minos Prime's and Sisyphus Prime's attacks that move them to where a ray hit: one that meets nothing ends against an invisible wall
+        /// instead of at the world's origin (<see cref="EnemyKeeper.RaycastOrWall"/>).
+        /// </summary>
+        [HarmonyPatch]
+        private static class BossRaysInOpenSky
+        {
+            private static IEnumerable<System.Reflection.MethodBase> TargetMethods()
+            {
+                yield return AccessTools.Method(typeof(MinosPrime), "AirRaycastAttack");
+                yield return AccessTools.Method(typeof(SisyphusPrime), "DropAttackActivate");
+            }
+
+            private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, System.Reflection.MethodBase original)
+            {
+                System.Reflection.MethodInfo raycast = AccessTools.Method(typeof(Physics), nameof(Physics.Raycast), new[] { typeof(Vector3), typeof(Vector3), typeof(RaycastHit).MakeByRefType(), typeof(float), typeof(int) });
+                System.Reflection.MethodInfo instead = AccessTools.Method(typeof(EnemyKeeper), nameof(EnemyKeeper.RaycastOrWall));
+                int replaced = 0;
+                foreach (CodeInstruction i in instructions)
+                {
+                    if (i.Calls(raycast))
+                    {
+                        i.operand = instead;
+                        replaced++;
+                    }
+
+                    yield return i;
+                }
+
+                if (replaced != 1)
+                {
+                    Plugin.Log.LogWarning("patches: " + original.DeclaringType?.Name + "." + original.Name + " had " + replaced + " rays to replace, not 1 (ULTRAKILL changed?)");
+                }
+            }
+        }
+
+        /// <summary>The Sandbox's navmesh reads only the faces of Minecraft's blocks that look up or down (<see cref="SandboxTools.NavSources"/>).</summary>
+        [HarmonyPatch(typeof(Unity.AI.Navigation.NavMeshSurface), "CollectSources")]
+        private static class NavmeshSources
+        {
+            private static void Postfix(Unity.AI.Navigation.NavMeshSurface __instance, List<UnityEngine.AI.NavMeshBuildSource> __result) => SandboxTools.NavSources(__instance, __result);
         }
 
         /// <summary>The Jackhammer's strike on Minecraft's blocks mines them (<see cref="Punches.AfterHammer"/>): its effects come once the strike is done.</summary>

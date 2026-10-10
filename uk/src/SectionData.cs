@@ -16,10 +16,69 @@ namespace UKPassthrough
         public readonly byte Kind;
         public readonly float[] BoxData;
 
+        /// <summary>
+        /// Which of the block's six faces one of its boxes covers whole (bit f: 0 -x, 1 +x, 2 -y, 3 +y, 4 -z, 5 +z, Minecraft's axes): a
+        /// neighbour's face against a covered one is hidden (soul sand's bottom on netherrack, a slab's underside on stone).
+        /// </summary>
+        public readonly int Cover;
+
         public Shape(byte kind, float[] boxes)
         {
             this.Kind = kind;
             this.BoxData = boxes;
+            this.Cover = kind == Full ? 0x3F : kind == Empty ? 0 : CoverOf(boxes);
+        }
+
+        private static int CoverOf(float[] b)
+        {
+            int cover = 0;
+            for (int k = 0; k + 5 < b.Length; k += 6)
+            {
+                for (int axis = 0; axis < 3; axis++)
+                {
+                    int u = (axis + 1) % 3, v = (axis + 2) % 3;
+                    if (b[k + u] <= 0f && b[k + 3 + u] >= 1f && b[k + v] <= 0f && b[k + 3 + v] >= 1f)
+                    {
+                        cover |= (b[k + axis] <= 0f ? 1 << (axis * 2) : 0) | (b[k + 3 + axis] >= 1f ? 1 << (axis * 2 + 1) : 0);
+                    }
+                }
+            }
+
+            return cover;
+        }
+
+        /// <summary>Whether two shapes collide alike (the same object, or the same kind and boxes).</summary>
+        public static bool Same(Shape a, Shape b)
+        {
+            if (ReferenceEquals(a, b))
+            {
+                return true;
+            }
+
+            if (a.Kind != b.Kind)
+            {
+                return false;
+            }
+
+            if (a.Kind != Boxes)
+            {
+                return true;
+            }
+
+            if (a.BoxData.Length != b.BoxData.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < a.BoxData.Length; i++)
+            {
+                if (a.BoxData[i] != b.BoxData[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 
@@ -66,6 +125,28 @@ namespace UKPassthrough
         public byte Kind;
         public Shape[] Palette;
         public ushort[] Cells;
+
+        /// <summary>The message it was parsed from: a section sent again unchanged is known by it (<see cref="SameAs"/>).</summary>
+        public byte[] Raw;
+
+        /// <summary>Whether <paramref name="other"/> came from the same bytes (Minecraft sent the section again with nothing changed).</summary>
+        public bool SameAs(SectionData other)
+        {
+            if (other == null || this.Raw == null || other.Raw == null || this.Raw.Length != other.Raw.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < this.Raw.Length; i++)
+            {
+                if (this.Raw[i] != other.Raw[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         /// <summary>
         /// Water and lava per block, index (y * 16 + z) * 16 + x: 0 none, else fluid kind (<see cref="Liquids.KindWater"/>,
@@ -117,7 +198,7 @@ namespace UKPassthrough
                     throw new InvalidDataException("not a section message");
                 }
 
-                var s = new SectionData { X = reader.ReadInt32(), Y = reader.ReadInt32(), Z = reader.ReadInt32(), Kind = reader.ReadByte() };
+                var s = new SectionData { X = reader.ReadInt32(), Y = reader.ReadInt32(), Z = reader.ReadInt32(), Kind = reader.ReadByte(), Raw = message };
                 if (s.Kind == KindMixed)
                 {
                     ReadShapes(reader, s);

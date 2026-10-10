@@ -285,11 +285,16 @@ import org.joml.Vector3f;
  * With UKPASSTHROUGH_DEMO=43: round 31, the stutter with V2 and Gabriel. Each boss fights V1 in survival on a stone field (V1 at 5%
  * damage taken, strafing and firing) while ULTRAKILL logs its slow frames, garbage collections and allocations, with the navmesh kept
  * as in round 30 and as since round 31.
+ * <p>
+ * With UKPASSTHROUGH_DEMO=44: round 32, the Nether's stutter and bosses that go missing. V1 flies through the Nether with ULTRAKILL's
+ * noclip (still, east at 20 blocks a second, back west at 50) while both sides log their slow frames and what the blocks cost; then
+ * Minos Prime, V2, the Mindflayer and Sisyphus Prime each fight V1 on Nether ground, V1 goes 100 blocks away and back, and ULTRAKILL
+ * logs where each of them is; last, V2 is left behind as V1 goes to the overworld.
  */
 final class DevDemo {
 	// List.of(...).contains(null) throws: without the variable (every normal start) the mod didn't load
 	private static final boolean ENABLED = System.getenv("UKPASSTHROUGH_DEMO") != null
-		&& List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43").contains(System.getenv("UKPASSTHROUGH_DEMO"));
+		&& List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44").contains(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean STAINS_AND_PARRIES = "2".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean LIGHT_AND_NETHER = "3".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean HUD_AND_HURT = "4".equals(System.getenv("UKPASSTHROUGH_DEMO"));
@@ -332,6 +337,7 @@ final class DevDemo {
 	private static final boolean ROUND29C = "41".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean ROUND30 = "42".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean ROUND31 = "43".equals(System.getenv("UKPASSTHROUGH_DEMO"));
+	private static final boolean ROUND32 = "44".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	/** Demo 16: the largest gap between Steve's yaw and the first-person item's lagging yaw while V1 turned, and when. */
 	private static float largestSway;
 	private static int largestSwayAt;
@@ -387,7 +393,7 @@ final class DevDemo {
 			step = -1;
 		}
 
-		if ((ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31) && minecraft.player != null && minecraft.player.isDeadOrDying() && minecraft.gui.screen() instanceof net.minecraft.client.gui.screens.DeathScreen) {
+		if ((ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31 || ROUND32) && minecraft.player != null && minecraft.player.isDeadOrDying() && minecraft.gui.screen() instanceof net.minecraft.client.gui.screens.DeathScreen) {
 			// Steve died while the test world waited for ULTRAKILL (mobs at night): back to life first
 			minecraft.player.respawn();
 			minecraft.gui.setScreen(null);
@@ -403,7 +409,7 @@ final class DevDemo {
 				placed = true;
 				String command = String.format(Locale.ROOT, "tp @a 17.5 %d 182.5 -90 0", y);
 				server.execute(() -> server.getCommands().performPrefixedCommand(server.createCommandSourceStack().withSuppressedOutput(), command));
-				if (ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31) {
+				if (ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31 || ROUND32) {
 					// nothing to kill Steve while the world waits for ULTRAKILL
 					server.execute(() -> server.getCommands().performPrefixedCommand(server.createCommandSourceStack().withSuppressedOutput(), "difficulty peaceful"));
 				}
@@ -423,9 +429,12 @@ final class DevDemo {
 
 		// a player at the keys, as far as Minecraft's lower frame rate for nobody playing goes (the script's input isn't real)
 		minecraft.getFramerateLimitTracker().onInputReceived();
-		if (STAINS_AND_PARRIES || LIGHT_AND_NETHER || HUD_AND_HURT || FIRE_AND_WHIPLASH || SPREAD_AND_RESPAWN || WATER_AND_PORTALS || OCEAN || THIRD_PERSON || FEEL_AND_LIGHT || EXPLOSIONS || RULES || PUNCHES || GROUND_AND_MOBS || INVENTORY_AND_HAND || BLOOD_AND_TURNING || PORTRAIT_AND_STRIKES || REACH_AND_LAUNCHES || PARRY_OTHERS || SANDBOX_ARM || ROUND18 || ROUND19 || ROUND20 || ROUND21 || ROUND22 || ROUND23 || ROUND24 || ROUND24B || ROUND24C || ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31) {
+		if (STAINS_AND_PARRIES || LIGHT_AND_NETHER || HUD_AND_HURT || FIRE_AND_WHIPLASH || SPREAD_AND_RESPAWN || WATER_AND_PORTALS || OCEAN || THIRD_PERSON || FEEL_AND_LIGHT || EXPLOSIONS || RULES || PUNCHES || GROUND_AND_MOBS || INVENTORY_AND_HAND || BLOOD_AND_TURNING || PORTRAIT_AND_STRIKES || REACH_AND_LAUNCHES || PARRY_OTHERS || SANDBOX_ARM || ROUND18 || ROUND19 || ROUND20 || ROUND21 || ROUND22 || ROUND23 || ROUND24 || ROUND24B || ROUND24C || ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31 || ROUND32) {
 			punchWhenClose(minecraft, step);
-			if (ROUND31) {
+			if (ROUND32) {
+				aimTick();
+				round32(minecraft, step++);
+			} else if (ROUND31) {
 				round31(minecraft, step++);
 			} else if (ROUND30) {
 				aimTick();
@@ -3127,6 +3136,262 @@ final class DevDemo {
 			default -> {
 			}
 		}
+	}
+
+	/** Demo 44: the patch of Nether ground the bosses fight V1 on, and the spot 100 blocks away V1 goes to meanwhile. */
+	private static BlockPos arena;
+	private static BlockPos away;
+
+	/** Demo 44: the bosses, one after the other (the Mindflayer, a flier, starts higher). */
+	private static final String[] BOSSES = {"MinosPrime", "V2", "Mindflayer", "SisyphusPrime"};
+
+	/**
+	 * Demo 44 (round 32): the Nether's stutter and ULTRAKILL's bosses going missing. In creative with ULTRAKILL's noclip, V1 stands 10 s
+	 * in the Nether, flies east 30 s at noclip's 20 blocks a second (new sections arriving all the way, through netherrack, caves and over
+	 * the lava sea), then west 12 s at its dodge speed, 50 a second; both sides log slow frames and what the blocks cost every 5 and 10
+	 * s. Then in survival (5% damage taken, fire resistance) on a patch of Nether ground, each boss fights V1 15 s (V1 aims at it,
+	 * strafes and fires the revolver), V1 is put 100 blocks away for 8 s and back for 7 s, while ULTRAKILL logs where each enemy is twice
+	 * a second; last, V2 is left behind as V1 goes to the overworld.
+	 */
+	private static void round32(final Minecraft minecraft, final int at) {
+		int boss = at >= 1340 && at < 1340 + 640 * BOSSES.length ? (at - 1340) / 640 : -1;
+		int t = boss >= 0 ? (at - 1340) % 640 : at >= 3900 && at < 4260 ? at - 3900 : -1;
+		if (t >= 0) {
+			fightTick(minecraft, t, t < 300 || t >= 460 && t < 600);
+		}
+
+		if (boss >= 0 && arena != null) {
+			String name = BOSSES[boss];
+			switch (t) {
+				case 0 -> {
+					log(name + ": spawned 8 blocks east of V1");
+					ukSpawn(name, arena.getX() + 8.5, arena.getY() + (name.equals("Mindflayer") ? 3.0 : 0.5), arena.getZ() + 0.5, 90.0F, false);
+					enemyTrace(name, 31.0);
+				}
+				case 300 -> {
+					if (away != null) {
+						command(minecraft, String.format(Locale.ROOT, "tp @p %d.5 %d %d.5 -90 0", away.getX(), away.getY(), away.getZ()));
+						log(name + ": V1 put 100 blocks west for 8 s");
+					}
+				}
+				case 460 -> {
+					command(minecraft, String.format(Locale.ROOT, "tp @p %d.5 %d %d.5 -90 0", arena.getX(), arena.getY(), arena.getZ()));
+					log(name + ": V1 back on the patch");
+				}
+				case 600 -> {
+					log(name + ": done");
+					debug("enemies", "", 0, "", 0);
+				}
+				case 610 -> debug("clearenemies", "", 0, "", 0);
+				default -> {
+				}
+			}
+		}
+
+		switch (at) {
+			case 0 -> {
+				command(minecraft, "gamemode creative @p");
+				command(minecraft, "time set noon");
+				command(minecraft, "weather clear");
+				command(minecraft, "difficulty peaceful");
+				command(minecraft, "kill @e[type=!minecraft:player,distance=..80]");
+				command(minecraft, "effect clear @p");
+				minecraft.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+				debug("lag", "every", 5, "slow", 12);
+			}
+			case 1 -> debug("lag", "every", 5, "detail", 1);
+			case 5 -> {
+				command(minecraft, "execute in minecraft:the_nether run tp @a 0.5 50 0.5 -90 0");
+				log("to the Nether");
+			}
+			case 120 -> debug("cheat", "id", "ultrakill.noclip", "on", 1);
+			case 125 -> {
+				command(minecraft, "tp @p 0.5 50 0.5 -90 0");
+				aimAt = new Vec3(1000.5, 51.6, 0.5);
+			}
+			case 130 -> log("standing still in the Nether (noclip): starts");
+			case 330 -> {
+				log("the flight east at 20 blocks a second: starts");
+				InputForwarder.key(InputConstants.KEY_W, true);
+			}
+			case 930 -> {
+				InputForwarder.key(InputConstants.KEY_W, false);
+				log("the flight east: done");
+				aimAt = new Vec3(-1000.5, 51.6, 0.5);
+			}
+			case 960 -> {
+				log("the flight west at 50 blocks a second: starts");
+				InputForwarder.key(InputConstants.KEY_W, true);
+				InputForwarder.key(InputConstants.KEY_LSHIFT, true);
+			}
+			case 1200 -> {
+				InputForwarder.key(InputConstants.KEY_W, false);
+				InputForwarder.key(InputConstants.KEY_LSHIFT, false);
+				log("the flight west: done");
+				aimAt = null;
+			}
+			case 1260 -> debug("cheat", "id", "ultrakill.noclip", "on", 0);
+			case 1265 -> {
+				command(minecraft, "gamemode survival @p");
+				command(minecraft, "effect give @p minecraft:fire_resistance 100000 0 true");
+				debug("assist", "major", 1, "damage", 0.05);
+			}
+			case 1270 -> {
+				arena = groundNear(minecraft, 0, 0);
+				if (arena == null) {
+					arena = new BlockPos(0, 64, 0);
+				}
+
+				away = groundNear(minecraft, arena.getX() - 100, arena.getZ());
+				int x = arena.getX(), y = arena.getY(), z = arena.getZ();
+				// a patch of the Nether's own ground with room above it, in among its terrain
+				command(minecraft, String.format(Locale.ROOT, "fill %d %d %d %d %d %d minecraft:netherrack", x - 10, y - 2, z - 10, x + 10, y - 1, z + 10));
+				command(minecraft, String.format(Locale.ROOT, "fill %d %d %d %d %d %d minecraft:air", x - 10, y, z - 10, x + 10, y + 7, z + 10));
+				log("the bosses' patch at " + x + " " + y + " " + z + ", the spot away at " + (away == null ? "none" : away.getX() + " " + away.getY() + " " + away.getZ()));
+			}
+			case 1275 -> command(minecraft, String.format(Locale.ROOT, "tp @p %d.5 %d %d.5 -90 0", arena.getX(), arena.getY(), arena.getZ()));
+			// the revolver (ULTRAKILL starts with whatever was held last time)
+			case 1300 -> InputForwarder.key(InputConstants.KEY_1, true);
+			case 1302 -> InputForwarder.key(InputConstants.KEY_1, false);
+			case 3900 -> {
+				log("V2, left behind as V1 goes to the overworld: spawned");
+				ukSpawn("V2", arena.getX() + 8.5, arena.getY() + 0.5, arena.getZ() + 0.5, 90.0F, false);
+				enemyTrace("V2 and the overworld", 18.0);
+			}
+			case 3960 -> {
+				int y = overworldSurface(minecraft, 17, 182);
+				command(minecraft, String.format(Locale.ROOT, "execute in minecraft:overworld run tp @a 17.5 %d 182.5 -90 0", y));
+				log("to the overworld, V2 left in the Nether");
+			}
+			case 4250 -> debug("enemies", "", 0, "", 0);
+			case 4260 -> {
+				InputForwarder.key(InputConstants.KEY_A, false);
+				InputForwarder.key(InputConstants.KEY_D, false);
+				InputForwarder.button(1, false);
+				aimAt = null;
+				debug("clearenemies", "", 0, "", 0);
+			}
+			// Minos Prime's mid-air beam into the open sky (it used to put him at the world's origin, the bottom of the world)
+			case 4270 -> {
+				V1State.Pose p = V1State.live();
+				if (p != null) {
+					log("Minos Prime in the overworld, for his beam into the sky");
+					ukSpawn("MinosPrime", p.fx() + 6.0, p.fy() + 0.5, p.fz(), 90.0F, true);
+				}
+			}
+			case 4330 -> debug("bossray", "", 0, "", 0);
+			case 4340 -> debug("enemies", "", 0, "", 0);
+			case 4350 -> {
+				debug("clearenemies", "", 0, "", 0);
+				debug("assist", "major", 0, "damage", 1.0);
+			}
+			case 4370 -> {
+				command(minecraft, "effect clear @p");
+				command(minecraft, "difficulty normal");
+				debug("lag", "every", 10, "detail", 0);
+				log("finished");
+				finished = true;
+			}
+			default -> {
+			}
+		}
+	}
+
+	/** Demo 44: V1 aims at the nearest of ULTRAKILL's enemies, strafes left and right, and fires twice a second while {@code fighting}. */
+	private static void fightTick(final Minecraft minecraft, final int t, final boolean fighting) {
+		V1State.Pose p = V1State.live();
+		if (!fighting || p == null || minecraft.level == null) {
+			if (t == 300 || t == 600) {
+				InputForwarder.key(InputConstants.KEY_A, false);
+				InputForwarder.key(InputConstants.KEY_D, false);
+				InputForwarder.button(1, false);
+			}
+
+			return;
+		}
+
+		dev.ukmc.ukpassthrough.UkEnemy nearest = null;
+		double best = Double.MAX_VALUE;
+		for (dev.ukmc.ukpassthrough.UkEnemy e : minecraft.level.getEntitiesOfClass(dev.ukmc.ukpassthrough.UkEnemy.class, new net.minecraft.world.phys.AABB(p.fx() - 64.0, p.fy() - 64.0, p.fz() - 64.0,
+			p.fx() + 64.0, p.fy() + 64.0, p.fz() + 64.0))) {
+			double d = e.distanceToSqr(p.fx(), p.fy(), p.fz());
+			if (d < best) {
+				best = d;
+				nearest = e;
+			}
+		}
+
+		aimAt = nearest == null ? null : new Vec3(nearest.getX(), nearest.getY() + nearest.getBbHeight() * 0.6, nearest.getZ());
+		if (t % 60 == 0) {
+			InputForwarder.key(InputConstants.KEY_D, false);
+			InputForwarder.key(InputConstants.KEY_A, true);
+		} else if (t % 60 == 30) {
+			InputForwarder.key(InputConstants.KEY_A, false);
+			InputForwarder.key(InputConstants.KEY_D, true);
+		}
+
+		if (t % 10 == 0) {
+			InputForwarder.button(1, nearest != null);
+		} else if (t % 10 == 2) {
+			InputForwarder.button(1, false);
+		}
+	}
+
+	/** Demo 44: ULTRAKILL logs where its enemies are, whether they fall and what's under them, twice a second for {@code seconds}. */
+	private static void enemyTrace(final String label, final double seconds) {
+		JsonObject m = UkLink.type("debug");
+		m.addProperty("what", "enemyground");
+		m.addProperty("label", label);
+		m.addProperty("for", seconds);
+		m.addProperty("every", 0.5);
+		UkLink.get().send(m);
+	}
+
+	/**
+	 * Demo 44: a spot to stand on in the player's level near {@code x}, {@code z}: a sturdy top under two free blocks without lava, from
+	 * y 90 down to 33 (above the Nether's lava sea), looked for in squares 4 blocks apart out to 24; null if there's none.
+	 */
+	private static BlockPos groundNear(final Minecraft minecraft, final int x, final int z) {
+		IntegratedServer server = minecraft.getSingleplayerServer();
+		if (server == null) {
+			return null;
+		}
+
+		return server.submit(() -> {
+			net.minecraft.server.level.ServerLevel level = server.getPlayerList().getPlayers().getFirst().level();
+			for (int r = 0; r <= 24; r += 4) {
+				for (int dx = -r; dx <= r; dx += 4) {
+					for (int dz = -r; dz <= r; dz += 4) {
+						if (Math.max(Math.abs(dx), Math.abs(dz)) != r) {
+							continue;
+						}
+
+						for (int y = 90; y > 32; y--) {
+							BlockPos at = new BlockPos(x + dx, y, z + dz);
+							if (level.getBlockState(at.below()).isFaceSturdy(level, at.below(), net.minecraft.core.Direction.UP)
+								&& level.getBlockState(at).getCollisionShape(level, at).isEmpty() && level.getFluidState(at).isEmpty()
+								&& level.getBlockState(at.above()).getCollisionShape(level, at.above()).isEmpty() && level.getFluidState(at.above()).isEmpty()) {
+								return at;
+							}
+						}
+					}
+				}
+			}
+
+			return null;
+		}).join();
+	}
+
+	/**
+	 * Demo 44: the overworld's surface at {@code x}, {@code z} (where Steve stands there). Its chunk is loaded first: the first run asked
+	 * with it unloaded, got the world's bottom, and put Steve and V1 in the ground.
+	 */
+	private static int overworldSurface(final Minecraft minecraft, final int x, final int z) {
+		IntegratedServer server = minecraft.getSingleplayerServer();
+		return server == null ? 80 : server.submit(() -> {
+			server.overworld().getChunk(x >> 4, z >> 4);
+			return server.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+		}).join();
 	}
 
 	private static void round30(final Minecraft minecraft, final int at) {

@@ -483,10 +483,17 @@ namespace UKPassthrough
     /// <summary>
     /// One section's water or lava boxes, on an object of their own under the <see cref="Water"/> they belong to. Trigger
     /// messages only reach the collider's own object (and a Rigidbody's): this passes them on, as if the boxes were the
-    /// Water's own.
+    /// Water's own. Not an enemy's into lava (round 32): ULTRAKILL gives an enemy in water a bubble effect only in wet water, and its
+    /// Water.FixedUpdate then switched the missing one on and off as the enemy went under (an error each time, the rest of that
+    /// physics step's water skipped) and, for one that died there, put the missing one back in the water effects' pool, breaking a
+    /// later enemy's bubbles. Bosses got into the Nether's lava sea once they stopped falling out of the world; Minecraft's mobs'
+    /// stand-ins (striders, magma cubes) are enemies to it too.
     /// </summary>
     internal sealed class WaterPart : MonoBehaviour
     {
+        /// <summary>ULTRAKILL's EnemyTrigger layer: what its Water takes for an enemy.</summary>
+        private const int EnemyLayer = 12;
+
         private static readonly System.Action<Water, Collider> Enter = AccessTools.MethodDelegate<System.Action<Water, Collider>>(AccessTools.Method(typeof(Water), "OnTriggerEnter"));
         private static readonly System.Action<Water, Collider> Exit = AccessTools.MethodDelegate<System.Action<Water, Collider>>(AccessTools.Method(typeof(Water), "OnTriggerExit"));
 
@@ -496,7 +503,7 @@ namespace UKPassthrough
 
         private void OnTriggerEnter(Collider other)
         {
-            if (this.Water != null)
+            if (this.Water != null && !this.Ignores(other))
             {
                 Enter(this.Water, other);
             }
@@ -504,10 +511,12 @@ namespace UKPassthrough
 
         private void OnTriggerExit(Collider other)
         {
-            if (this.Water != null)
+            if (this.Water != null && !this.Ignores(other))
             {
                 Exit(this.Water, other);
             }
         }
+
+        private bool Ignores(Collider other) => other != null && other.gameObject.layer == EnemyLayer && this.Water == Liquids.LavaWater;
     }
 }

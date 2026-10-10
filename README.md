@@ -16,7 +16,7 @@ weapons, the arms and the HUD. Minecraft supplies the world, the blocks and the 
 - **A settings menu** in Minecraft's pause menu: Progression Mode (earn P from experience and buy your guns), a
   Balance page, Safe Building, Potato Mode and more.
 
-> Status: **0.1.1, an early release.** It's played and tested, but expect bugs. Please report them (see
+> Status: **0.1.2, an early release.** It's played and tested, but expect bugs. Please report them (see
 > [Reporting a bug](#reporting-a-bug)).
 
 ## What you need
@@ -38,7 +38,7 @@ updated too.
 
 Download the two files from the [Releases page](https://github.com/xandermodsstuff-dot/ultrakill-minecraft/releases/latest):
 
-- `ukpassthrough-0.1.1.jar` is the **Minecraft** half.
+- `ukpassthrough-0.1.2.jar` is the **Minecraft** half.
 - `UKPassthrough.dll` is the **ULTRAKILL** half.
 
 ### Part 1: Minecraft
@@ -57,7 +57,7 @@ own file isn't on Modrinth or CurseForge, so with those apps you add it by hand.
    (open its **Versions** tab and pick one marked 26.3).
 4. Open your mods folder. Press **Windows key + R**, type `%appdata%\.minecraft\mods` and press Enter. If Windows
    says it doesn't exist, open `%appdata%\.minecraft` instead and make a folder called `mods` there.
-5. Put both jars in the mods folder: Fabric API and `ukpassthrough-0.1.1.jar`.
+5. Put both jars in the mods folder: Fabric API and `ukpassthrough-0.1.2.jar`.
 6. In the Minecraft Launcher, choose **fabric-loader-…-26.3** in the list next to the Play button.
 
 **B. With the Modrinth App**
@@ -70,7 +70,7 @@ own file isn't on Modrinth or CurseForge, so with those apps you add it by hand.
    **Fabric API** and click **Install**. The app picks the version for 26.3 by itself.
 4. Open the instance's folder: on the instance's page, click the **⋮** (three dots) button and choose
    **Open folder**. Open the `mods` folder in it. If there's none, make a folder called `mods`.
-5. Put `ukpassthrough-0.1.1.jar` in that `mods` folder.
+5. Put `ukpassthrough-0.1.2.jar` in that `mods` folder.
 6. Back in the app, click **Play** on the instance.
 
 **C. With the CurseForge app**
@@ -81,7 +81,7 @@ own file isn't on Modrinth or CurseForge, so with those apps you add it by hand.
 3. Open the new profile and click **Add More Content**. Search for **Fabric API** and click **Install**.
 4. Open the profile's folder: click the **⋮** (three dots) button next to **Play** and choose **Open Folder**.
    Open the `mods` folder in it. If there's none, make a folder called `mods`.
-5. Put `ukpassthrough-0.1.1.jar` in that `mods` folder.
+5. Put `ukpassthrough-0.1.2.jar` in that `mods` folder.
 6. Back in the app, click **Play** on the profile.
 
 The buttons' names can differ a little between versions of these apps. If one isn't there, look for the closest match.
@@ -190,6 +190,8 @@ Esc, then **ULTRAKILL x Minecraft Settings**:
 - If you switch to ULTRAKILL's own window while playing, it looks wrong (no sky, no HUD). That's expected: its
   picture goes to Minecraft.
 - ULTRAKILL's blood spray at the moment of a hit can draw over grass and flowers in front of the mob.
+- ULTRAKILL's enemies more than about 128 blocks from you wait where they are (in the air if need be) until you come
+  back: past that, Minecraft doesn't give ULTRAKILL the blocks under them.
 
 ## Problems
 

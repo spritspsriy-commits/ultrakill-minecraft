@@ -55,7 +55,7 @@ final class Lag {
 			summaryAt = now + SUMMARY_EVERY_NANOS;
 		} else if (now >= summaryAt) {
 			summaryAt = now + SUMMARY_EVERY_NANOS;
-			UKPassthrough.LOG.info(String.format(Locale.ROOT, "lag: %d frames in the last 10 s, %d over %.0f ms, the longest %.0f ms", frames, slow, SLOW_MS, worst));
+			UKPassthrough.LOG.info(String.format(Locale.ROOT, "lag: %d frames in the last 10 s, %d over %.0f ms, the longest %.0f ms; blocks: %s", frames, slow, SLOW_MS, worst, BlockStream.stats()));
 			frames = 0;
 			slow = 0;
 			worst = 0.0;

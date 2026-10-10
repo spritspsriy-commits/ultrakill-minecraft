@@ -9,7 +9,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Every block change the client sees marks its section for resending to ULTRAKILL. */
+/**
+ * Every block change the client sees marks its section for resending to ULTRAKILL. (Until round 32 a light update did too, through
+ * setSectionDirtyWithNeighbors: in 26.3 only the server's light packets call it, and light isn't collision, so each one sent a section
+ * that hadn't changed, and ULTRAKILL built it and its neighbours again.)
+ */
 @Mixin(ClientLevel.class)
 abstract class ClientLevelMixin {
 	@Inject(method = "sendBlockUpdated", at = @At("HEAD"))
@@ -17,10 +21,5 @@ abstract class ClientLevelMixin {
 		if (oldState != newState) {
 			BlockStream.blockChanged(pos.getX(), pos.getY(), pos.getZ());
 		}
-	}
-
-	@Inject(method = "setSectionDirtyWithNeighbors", at = @At("HEAD"))
-	private void ukpassthrough$sectionChanged(final int sx, final int sy, final int sz, final CallbackInfo ci) {
-		BlockStream.sectionChanged(sx, sy, sz);
 	}
 }

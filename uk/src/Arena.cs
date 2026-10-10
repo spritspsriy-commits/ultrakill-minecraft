@@ -73,6 +73,10 @@ namespace UKPassthrough
         private bool activatorUsed;
         /// <summary>Minecraft opened a world (round 29): V1 falls in from the sky, at full health, when it's next put in place.</summary>
         private bool enteringWorld;
+
+        /// <summary>A dimension change: ULTRAKILL's enemies are moved by V1's own move once it's placed (from where its feet were).</summary>
+        private bool enemiesFollow;
+        private Vector3 followFrom;
         /// <summary>How far the player could go up from where it stands, in blocks (the "sky" of Minecraft's player message).</summary>
         private double skyAbove;
         /// <summary>V1 is falling in from the sky, switched off as in ULTRAKILL's level-start pit until it lands.</summary>
@@ -398,6 +402,19 @@ namespace UKPassthrough
             int id = (int?)m["id"] ?? 0;
             bool wasInWorld = this.minecraftInWorld;
             this.minecraftInWorld = m["dim"] != null && m["dim"].Type != JTokenType.Null;
+            if (wasInWorld && !this.minecraftInWorld && this.attached && this.InSandbox)
+            {
+                // the world closed: ULTRAKILL's enemies were in it (round 32: they used to wait in the Sandbox and turn up in the next one)
+                SandboxTools.ClearEnemies();
+            }
+
+            if (wasInWorld && this.minecraftInWorld && id != this.worldId && this.attached && this.state == State.Playing && MonoSingleton<NewMovement>.Instance != null)
+            {
+                // another dimension of the same world: ULTRAKILL's enemies come along, each where it was from V1 (EnemyKeeper.Follow)
+                this.followFrom = Feet(MonoSingleton<NewMovement>.Instance);
+                this.enemiesFollow = true;
+            }
+
             if (this.minecraftInWorld && !wasInWorld)
             {
                 // a world opened (not another dimension of the same one): V1 falls in from the sky as at a level's start, at full health
@@ -512,6 +529,7 @@ namespace UKPassthrough
             }
             Lag.Mark("ground");
             EnemyGround.Update(this.Blocks, this.Blocks.RebuiltFrame == Time.frameCount);
+            EnemyKeeper.Update(this.Blocks, this.minY, player, false, this.link);
             Lag.Mark("enemy ground");
             this.Explosions.AfterBuild(this.Blocks);
             this.Blocks.Liquids.Update(focus);
@@ -581,6 +599,12 @@ namespace UKPassthrough
         public void LateUpdate()
         {
             Lag.Mark("ULTRAKILL's own");
+            if (this.attached && this.InSandbox)
+            {
+                // whatever the enemies' own scripts did this frame, a held one stays put
+                EnemyKeeper.Update(this.Blocks, this.minY, MonoSingleton<NewMovement>.Instance, true, this.link);
+            }
+
             this.Picture.LateUpdate();
             Lag.Mark("picture copy");
         }
@@ -679,6 +703,12 @@ namespace UKPassthrough
             {
                 this.enteringWorld = false;
                 FullHealth(player);
+            }
+
+            if (this.enemiesFollow)
+            {
+                this.enemiesFollow = false;
+                EnemyKeeper.Follow(feet - this.followFrom);
             }
 
             this.awaitingRespawn = false;
@@ -1054,6 +1084,7 @@ namespace UKPassthrough
             this.Portrait.Stop();
             SandboxTools.Detach();
             EnemyGround.Detach();
+            EnemyKeeper.Detach();
             this.Terminal.Detach();
             Progression.Detach();
             Settings.Detach();

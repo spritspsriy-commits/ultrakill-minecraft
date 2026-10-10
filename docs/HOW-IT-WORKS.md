@@ -314,8 +314,12 @@ Minecraft 26.3 + Fabric (mc/)                         ULTRAKILL + BepInEx 5 (uk/
     (`PlacedBlocks.java`: `BlockItemMixin` marks a placement, `LevelMixin` sees the outermost `Level.setBlock` calls during it and
     forgets a block when air, a fluid or fire takes its place; `FireBlockMixin` keeps gasoline's fire, and the fire spread from it, off
     the placed blocks).
+  - Protocol 29 (round 32): `keep` (ULTRAKILL to Minecraft): the sections its own enemies within 128 blocks of V1 are in, when they
+    change (and every 2 s while there are any); Minecraft sends the 3x3x3 sections around each of them as well, so a boss left
+    behind or below V1 still has ground (`EnemyKeeper.cs`, `BlockStream.onKeep`).
   - Slow frames: both sides log frames over 50 ms with the mod's own parts of them, and a line every 10 s (`Lag.cs`, `Lag.java`;
-    "lag:" in ULTRAKILL's `LogOutput.log` and Minecraft's `latest.log`).
+    "lag:" in ULTRAKILL's `LogOutput.log` and Minecraft's `latest.log`). Since round 32 the summary lines also say how many
+    sections were sent (Minecraft) and how many arrived and were built, and what that cost (ULTRAKILL).
   - `debug`: test aids for the plugin (`RenderProbe.cs`), sent by `fake_mc.py`.
 - **Blocks** go as 16x16x16 sections (`SectionEncoder.java` documents the layout). Each block is described
   by its collision shape: empty, a full block, or boxes (slabs, stairs, fences), and by its water or lava and
@@ -324,8 +328,9 @@ Minecraft 26.3 + Fabric (mc/)                         ULTRAKILL + BepInEx 5 (uk/
   the like hold back, and what can be climbed or is a bubble column), and ULTRAKILL applies it around each of V1's
   physics steps (`PlayerRules.cs`).
   - Minecraft sends the sections within 64 blocks across and 32 up and down of V1 (of Steve, until V1
-    exists), nearest first.
-  - A changed section is resent in the same tick.
+    exists), nearest first, and those around ULTRAKILL's enemies (`keep`, above).
+  - A changed section is resent in the same tick, unless it comes out the same as it was last sent (a crop growing). Light
+    updates don't count as changes (until round 32 they did, through `ClientLevel.setSectionDirtyWithNeighbors`).
 - **In ULTRAKILL** each section becomes one mesh: the exposed faces of full blocks merged into rectangles,
   plus the boxes of partial blocks. It's a MeshCollider on the Environment layer, so ground checks,
   wall-jumps, slams and bullets treat it as level geometry. V1's own `ClimbStep` walks it up one-block
@@ -335,6 +340,25 @@ Minecraft 26.3 + Fabric (mc/)                         ULTRAKILL + BepInEx 5 (uk/
   (`KeepGroundHonest`, round 24), or V1 could stand on air and jump there again and again. The blocks are only their outer
   faces, so nothing pushes V1 out of them: V1's feet inside a full block (ULTRAKILL's noclip turned off underground) lift it
   to the first free space above (`LiftOutOfBlocks`, round 24c).
+  - Round 32 (the Nether's stutter, measured with demo 44): building is cheap and happens once where it can. `Mesher` reads the
+    section and its neighbours' layers into one padded grid; a partial block's faces against a full block or a covering box are left
+    out and its whole-block tops and bottoms merged (a soul sand section was 24,000 vertices). A section sent again unchanged is left
+    alone; a neighbour is built again only if what's beside its own blocks along the border changed (`BlockWorld.MarkNeighbours`,
+    `BorderChanged`), and not when far sections are let go; away from V1 a neighbour that hasn't come counts as solid (next to V1 as
+    open). Each collider is cooked on a worker thread (`Physics.BakeMesh`) and goes in when it's ready, the old one staying meanwhile.
+    Flying through the Nether at 20 blocks a second, building went from about a fifth of ULTRAKILL's frame to about 3%.
+  - The Sandbox's navmesh reads only each section's faces that look up or down (a second mesh per section, `BlockWorld.NavSource`,
+    a patch after `NavMeshSurface.CollectSources`): a third of the vertices, and each rebuild's first frame no longer climbs to
+    20-50 ms with a boss in the Nether.
+- **ULTRAKILL's own enemies on Minecraft's blocks** (round 32, `EnemyKeeper.cs`): an enemy whose section, or the one under it, has no
+  collision yet is held where it is until it has (one walking its navmesh is left to it); one that still gets below the world is
+  put back where it last stood; on a dimension change they come along, each where it was from V1. Minos Prime's mid-air beam and
+  dive and Sisyphus Prime's dive move the boss to where a ray hit without looking whether it hit; in the open, a ray that meets
+  nothing ends against an invisible wall past V1 instead of putting the boss at Unity's 0, 0, 0 (a transpiler on
+  `MinosPrime.AirRaycastAttack` and `SisyphusPrime.DropAttackActivate`). An enemy stuck inside blocks goes to the nearest free space
+  above or below (`EnemyGround.LiftOutOfBlocks`), and Minecraft's lava doesn't take enemies into ULTRAKILL's water code (its
+  bubble effect for them is missing there, which threw and broke the effects pool). The world closing takes ULTRAKILL's enemies
+  with it.
 - **Coordinates:** 1 block = 2 ULTRAKILL units (V1 is 3.5 tall, so 1.75 blocks). Minecraft x is mirrored
   into Unity's left-handed space, with the origin near where the player started (`Coords.cs`).
 - **Input (stage 3):**
@@ -566,7 +590,7 @@ first, because it locks the plugin DLL. The pieces:
   installed ULTRAKILL (`-p:UltrakillDir=...`) and the profile's BepInEx (`-p:BepInExDir=...`); nothing from
   them is copied into this folder. Copy `uk\bin\Release\UKPassthrough.dll` to the profile's
   `BepInEx\plugins\UKPassthrough\`.
-- **Minecraft mod:** `cd mc` then `gradlew build` (JDK 25). The jar is `mc\build\libs\ukpassthrough-0.1.1.jar`.
+- **Minecraft mod:** `cd mc` then `gradlew build` (JDK 25). The jar is `mc\build\libs\ukpassthrough-0.1.2.jar`.
   - While maven.fabricmc.net is unreachable, build from the Gradle cache and the Fabric API jar in
     `mc\libs\fabric-api\` (from Modrinth):
     `gradlew build -Ploom_version=1.17.20 -Ploader_version=0.19.3 -PlocalFabricApi`
