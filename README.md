@@ -32,7 +32,8 @@ weapons, the arms and the HUD. Minecraft supplies the world, the blocks and the 
   over the internet.
 
 Both games are needed because nothing from them is included here. A game update can break the mod until it's
-updated too.
+updated too. I can not officially support cracked versions of Minecraft and ULTRAKILL, and I do not know if the mod will
+work on them.
 
 ### PC specs
 
