@@ -27,12 +27,39 @@ weapons, the arms and the HUD. Minecraft supplies the world, the blocks and the 
   22957324).
 - **An ULTRAKILL save that has finished the tutorial and has the Revolver**, the first pistol. Without it, the mod
   doesn't work properly. See the start of [Part 2](#part-2-ultrakill).
-- A PC that can run both games at once. Potato Mode in the settings helps on slower PCs.
+- A PC that can run both games at once: see [PC specs](#pc-specs) below.
 - **Single-player only.** The two games talk to each other only on your own PC (address 127.0.0.1); nothing goes
   over the internet.
 
 Both games are needed because nothing from them is included here. A game update can break the mod until it's
 updated too.
+
+### PC specs
+
+Minecraft and ULTRAKILL run at the same time, so you need more than either game needs on its own. These are
+estimates: they come from both games' official requirements and from what the two used together on the one PC the mod
+has been tested on (below). It hasn't been tried on a low-end PC yet.
+
+| | Minimum | Recommended |
+|---|---|---|
+| **System** | Windows 10, 64-bit | Windows 11, 64-bit |
+| **Processor** | 6 cores, for example Ryzen 5 3600 or Core i5-10400 | 8 cores or more, for example Ryzen 7 5700X or Core i5-12600K |
+| **Memory (RAM)** | 12 GB (16 GB with integrated graphics) | 16 GB or more |
+| **Graphics card** | Supports Vulkan 1.3, with 4 GB of video memory, for example GeForce GTX 1650 | 6 GB of video memory or more, for example GeForce RTX 2060 or Radeon RX 6600 |
+| **Storage** | 5 GB free for both games | The same, on an SSD |
+
+What the two games used together on the test PC (Ryzen 9 9900X, GeForce RTX 5080, 64 GB of RAM, Windows 11), flying
+through the Nether and fighting bosses:
+
+- **Memory:** about 4 GB for both, with Minecraft at the Minecraft Launcher's usual 2 GB. Windows and anything else you
+  have open come on top.
+- **Processor:** about 5 to 7 cores' worth of work, most of it ULTRAKILL's (it runs at a very high frame rate,
+  about 235 frames a second there; Minecraft ran at 120).
+- **Graphics card:** under 1 GB of video memory for both, in a 1280x720 window.
+
+On a slower PC, turn on **Potato Mode** or **Super Potato Mode** in the settings menu and lower Minecraft's render
+distance. The games' own requirements: [Minecraft: Java Edition](https://www.minecraft.net/en-us/article/minecraft-java-edition-system-requirements)
+and [ULTRAKILL on Steam](https://store.steampowered.com/app/1229490/ULTRAKILL/).
 
 ## Installing
 
@@ -214,7 +241,8 @@ Esc, then **ULTRAKILL x Minecraft Settings**:
 
   Then set `Port = 25601` in `BepInEx\config\dev.ukmc.ukpassthrough.cfg`. That file appears after ULTRAKILL has started
   once with the plugin.
-- **It runs slowly.** Turn on Potato Mode (or Super Potato Mode) in the settings menu.
+- **It runs slowly.** Check the [PC specs](#pc-specs), turn on Potato Mode (or Super Potato Mode) in the settings menu, and
+  lower Minecraft's render distance.
 
 ### Reporting a bug
 
