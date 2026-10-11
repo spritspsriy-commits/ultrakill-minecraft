@@ -15,6 +15,7 @@ weapons, the arms and the HUD. Minecraft supplies the world, the blocks and the 
 - **Third person** (F5), with V1's animated body.
 - **A settings menu** in Minecraft's pause menu: Progression Mode (earn P from experience and buy your guns), a
   Balance page, Safe Building, Potato Mode and more.
+- **Cybergrind Mode** if you want the cybergrind mode in minecraft, check out somegoodstew's cybergrind mod here! :https://github.com/somegoodstew/Cybergrind-mod
 
 > Status: **0.1.2, an early release.** It's played and tested, but expect bugs. Please report them (see
 > [Reporting a bug](#reporting-a-bug)).
