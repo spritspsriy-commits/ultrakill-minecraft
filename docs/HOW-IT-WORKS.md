@@ -317,6 +317,23 @@ Minecraft 26.3 + Fabric (mc/)                         ULTRAKILL + BepInEx 5 (uk/
   - Protocol 29 (round 32): `keep` (ULTRAKILL to Minecraft): the sections its own enemies within 128 blocks of V1 are in, when they
     change (and every 2 s while there are any); Minecraft sends the 3x3x3 sections around each of them as well, so a boss left
     behind or below V1 still has ground (`EnemyKeeper.cs`, `BlockStream.onKeep`).
+  - Protocol 30 (round 33, players' reports): `stop` (ULTRAKILL to Minecraft): one of ULTRAKILL's impact frames (`TimeController.HitStop`
+    and `TrueStop`: parries, heavy hits, the Jackhammer) started or got longer, and how long; Minecraft freezes its world that long as
+    `/tick freeze` does, the client's tick rate manager and frame timer at once and the server's too (`HitStops.cs`, `HitStops.java`).
+    `splat`: a light mob V1 knocked into the air (a hit's push, a launch, the Whiplash) landed going down at 1.1 blocks a tick or more
+    and died of it, as ULTRAKILL's husks splatter landing at 50 units a second; ULTRAKILL shows its splatter of gore and "SPLATTERED"
+    (`Knocked.java`, `Mobs.OnSplat`). `void`: the player took the void's damage while V1 drives; V1 dies, in creative too (`Arena.OnVoid`;
+    until round 33 V1 was put back at the player's spot under the world, four times a second). In `mobs`, flag 4: the mob is in the
+    air off its feet, as the server has it (`Knocked.inAir`); a rocket that hits one goes off as ULTRAKILL's big red explosion
+    (`Grenade.Collision` asks for an enemy's ground check off the ground, or one that has just appeared: the stand-in counts as just
+    appeared while in the air), and kills there score ULTRAKILL's air bonuses (FIREWORKS, AIR SLAM, AIRSHOT, JUGGLE).
+  - Also round 33: a mob the Whiplash pulls is stunned (its AI waits, `MobMixin`) until it has landed and 0.75 s more; electricity on a
+    stand-in with nails, magnets or water runs ULTRAKILL's own conduction (`Mobs.Conduct`: the nails light up, burst out, the shock
+    jumps on and "CONDUCTOR"); ULTRAKILL's fire sprite isn't drawn on mobs (Minecraft draws their flames; the mob's depth box cut a
+    box out of the sprite); shulker bullets hit V1 (they skip anything without physics, which the player is while V1 drives:
+    `ShulkerBulletMixin`); V1's body in third person keeps its gun's custom colours under Minecraft's light (`ThirdPerson.Tint`); and
+    ULTRAKILL's own enemies more than 72 blocks across or 40 up or down from V1 go to sleep (switched off where they are) until V1
+    comes within 60 and 28 again (`EnemyKeeper.SleepAndWake`), as past that ULTRAKILL has no blocks between them and V1.
   - Slow frames: both sides log frames over 50 ms with the mod's own parts of them, and a line every 10 s (`Lag.cs`, `Lag.java`;
     "lag:" in ULTRAKILL's `LogOutput.log` and Minecraft's `latest.log`). Since round 32 the summary lines also say how many
     sections were sent (Minecraft) and how many arrived and were built, and what that cost (ULTRAKILL).
@@ -590,7 +607,7 @@ first, because it locks the plugin DLL. The pieces:
   installed ULTRAKILL (`-p:UltrakillDir=...`) and the profile's BepInEx (`-p:BepInExDir=...`); nothing from
   them is copied into this folder. Copy `uk\bin\Release\UKPassthrough.dll` to the profile's
   `BepInEx\plugins\UKPassthrough\`.
-- **Minecraft mod:** `cd mc` then `gradlew build` (JDK 25). The jar is `mc\build\libs\ukpassthrough-0.1.2.jar`.
+- **Minecraft mod:** `cd mc` then `gradlew build` (JDK 25). The jar is `mc\build\libs\ukpassthrough-0.1.3.jar`.
   - While maven.fabricmc.net is unreachable, build from the Gradle cache and the Fabric API jar in
     `mc\libs\fabric-api\` (from Modrinth):
     `gradlew build -Ploom_version=1.17.20 -Ploader_version=0.19.3 -PlocalFabricApi`

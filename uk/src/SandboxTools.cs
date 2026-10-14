@@ -653,6 +653,13 @@ namespace UKPassthrough
                 }
             }
 
+            // the sleeping ones (round 33) are switched off, which the search above doesn't find
+            foreach (GameObject sleeping in EnemyKeeper.SleepingObjects())
+            {
+                Object.Destroy(sleeping.transform.root.gameObject);
+                n++;
+            }
+
             Plugin.Log.LogInfo("clear: " + n + " of ULTRAKILL's enemies removed");
         }
 

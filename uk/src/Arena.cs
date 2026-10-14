@@ -285,6 +285,44 @@ namespace UKPassthrough
             player.GetHurt(damage, invincible: true, explosion: (bool?)m["explosion"] ?? false);
         }
 
+        /// <summary>V1 was last seen more than 16 blocks under the world's bottom (for the log).</summary>
+        private bool belowWorld;
+
+        /// <summary>True while V1 dies in the void (<see cref="OnVoid"/>): creative and the totem don't save it there, as they don't save Steve.</summary>
+        public static bool VoidDeath { get; private set; }
+
+        /// <summary>
+        /// {"t":"void"}: the player fell out of Minecraft's world (round 33, a player's report: "when the player falls into the void the game
+        /// freaks out a bit"). Minecraft's void kills Steve 64 blocks under the world's bottom, in creative too and through a totem; V1 dropped
+        /// that damage and fell on for ever. Now it dies there.
+        /// </summary>
+        public void OnVoid()
+        {
+            NewMovement player = this.state == State.Playing && this.attached ? MonoSingleton<NewMovement>.Instance : null;
+            if (!this.V1Mode || player == null || player.dead)
+            {
+                return;
+            }
+
+            Plugin.Log.LogInfo("V1 fell out of Minecraft's world: it dies, as Steve would");
+            VoidDeath = true;
+            try
+            {
+                // whatever the assists take off, it's more than V1 has
+                player.hp = Mathf.Min(player.hp, 1);
+                player.GetHurt(1000000, invincible: false, ignoreInvincibility: true);
+            }
+            finally
+            {
+                VoidDeath = false;
+            }
+
+            if (!player.dead)
+            {
+                Plugin.Log.LogInfo("V1 is still alive after the void (ULTRAKILL's invincibility cheat is on)");
+            }
+        }
+
         /// <summary>{"t":"body",...}: the player's effects, for V1 (see <see cref="PlayerRules"/>).</summary>
         public void OnBody(JObject m)
         {
@@ -807,12 +845,14 @@ namespace UKPassthrough
             }
 
             Coords.ToMinecraft(Feet(player), out double x, out double y, out double z);
-            if (y < this.minY - 16)
+            bool below = y < this.minY - 16;
+            if (below != this.belowWorld)
             {
-                // fell out of the world (Minecraft's void): back to the player's spot
-                Plugin.Log.LogInfo("V1 fell out of the world: back to the player");
-                this.Hold();
-                return;
+                // round 33 (a player's report: "when the player falls into the void the game freaks out a bit"): V1 used to be put back at the
+                // player's spot here, but the player follows V1, so it was under the world too: V1 was put back there four times a second,
+                // for ever. Now it falls on, and Minecraft's void kills it 64 blocks under the bottom, as it would kill Steve (OnVoid).
+                this.belowWorld = below;
+                Plugin.Log.LogInfo(below ? "V1 is under the world at " + y.ToString("0.0") + ": it falls on into Minecraft's void" : "V1 is back above the world's bottom");
             }
 
             // V1 respawns at the Sandbox's checkpoint: keep it where V1 last stood on the ground

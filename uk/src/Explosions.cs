@@ -67,7 +67,7 @@ namespace UKPassthrough
             Vector3 at = e.transform.position;
             bool counts = !e.harmless && e.maxSize > 0f;
             string kind = KindOf(e);
-            Plugin.Log.LogDebug("explosion " + e.name + " at " + at + ": size " + e.maxSize.ToString("0.00") + ", damage " + e.damage + (e.harmless ? ", harmless" : "")
+            Plugin.Log.LogDebug("explosion " + e.name + " (of " + e.transform.root.name + ") at " + at + ": size " + e.maxSize.ToString("0.00") + ", damage " + e.damage + (e.harmless ? ", harmless" : "")
                 + (e.enemy ? ", an enemy's" : "") + ", weapon " + e.hitterWeapon + ", from " + (e.sourceWeapon != null ? e.sourceWeapon.name : "nothing") + (e.rocketExplosion ? ", a rocket's" : "")
                 + ": " + kind + (counts ? "" : " (not sent)"));
             if (!counts || Settings.ExplosionStrength <= 0f)

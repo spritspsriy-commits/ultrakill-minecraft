@@ -14,7 +14,18 @@ namespace UKPassthrough
     /// ({"t":"keep","s":[sx,sy,sz, ...]}, the sections they're in, when they change); an enemy whose section, or the one under it, has no
     /// collision yet is held where it is (as Minecraft leaves mobs alone in chunks it hasn't loaded) until the blocks come; one walking its
     /// navmesh is left to it. One that still gets below the world is put back where it last stood (as ULTRAKILL brings its bosses back).
-    /// On a dimension change they come along beside V1 (<see cref="Follow"/>). Main thread.
+    /// On a dimension change they come along beside V1 (<see cref="Follow"/>).
+    /// <para>
+    /// Round 33 (a player's report: "Enemies are active outside unloaded chunks ... They're still active which may cause lag. Collisions
+    /// aren't checked which means ULTRAKILL enemies can shoot from insane distances and trough walls"): ULTRAKILL has Minecraft's blocks
+    /// only around V1 (64 blocks each way across, 32 up and down) and its enemies, so one farther off saw V1, and shot at it, through
+    /// the hills and walls between that ULTRAKILL didn't have, and went on costing frames. Now, as Minecraft leaves its mobs alone in
+    /// chunks it hasn't loaded, an enemy more than <see cref="SleepAcross"/> blocks away across (east-west or north-south) or
+    /// <see cref="SleepUpDown"/> up or down goes to sleep where it is: switched off, not drawn, nothing of it running (<see cref="SleepAndWake"/>),
+    /// until V1 comes within <see cref="WakeAcross"/> and <see cref="WakeUpDown"/> again, where it and everything between it and V1 has
+    /// its blocks. ULTRAKILL switches its enemies off and on itself (enemies of a room not entered yet, its own debug key).
+    /// </para>
+    /// Main thread.
     /// </summary>
     internal static class EnemyKeeper
     {
@@ -30,7 +41,21 @@ namespace UKPassthrough
         private const float KeepEvery = 0.25f;
         private const float KeepAgain = 2f;
 
+        /// <summary>
+        /// Blocks from V1 (across: the larger of east-west and north-south) past which an enemy sleeps, and within which it wakes: inside
+        /// the 64 by 32 blocks ULTRAKILL has around V1, with room between the two so one at the edge doesn't flicker.
+        /// </summary>
+        private const float SleepAcross = 72f;
+        private const float SleepUpDown = 40f;
+        private const float WakeAcross = 60f;
+        private const float WakeUpDown = 28f;
+        private const float SleepEvery = 0.25f;
+
         private static readonly Dictionary<EnemyIdentifier, Kept> Enemies = new Dictionary<EnemyIdentifier, Kept>();
+        /// <summary>Sleeping enemies and the object switched off for each (what the Sandbox spawned).</summary>
+        private static readonly Dictionary<EnemyIdentifier, GameObject> Asleep = new Dictionary<EnemyIdentifier, GameObject>();
+        private static readonly List<EnemyIdentifier> Woken = new List<EnemyIdentifier>();
+        private static float nextSleep;
         private static readonly HashSet<Vector3Int> KeepNow = new HashSet<Vector3Int>();
         private static readonly HashSet<Vector3Int> KeepSent = new HashSet<Vector3Int>();
         private static float nextKeep;
@@ -53,11 +78,100 @@ namespace UKPassthrough
         /// <summary>Whether the enemy is held for want of blocks (it doesn't count for the navmesh then).</summary>
         public static bool IsHeld(EnemyIdentifier eid) => eid != null && Enemies.TryGetValue(eid, out Kept k) && k.Held;
 
+        /// <summary>Development ({"t":"debug","what":"sleep","on":0}): enemies never sleep, as before round 33.</summary>
+        public static bool SleepOn { get; set; } = true;
+
+        /// <summary>How many are asleep now (for the log).</summary>
+        public static int SleepingCount => Asleep.Count;
+
         /// <summary>A new Sandbox: its enemies went with the old one.</summary>
         public static void Detach()
         {
             Enemies.Clear();
             KeepNow.Clear();
+            Asleep.Clear();
+        }
+
+        /// <summary>The sleeping enemies' objects (switched off: Unity's searches don't find them), for clearing them away.</summary>
+        public static List<GameObject> SleepingObjects()
+        {
+            var list = new List<GameObject>();
+            foreach (GameObject go in Asleep.Values)
+            {
+                if (go != null)
+                {
+                    list.Add(go);
+                }
+            }
+
+            Asleep.Clear();
+            return list;
+        }
+
+        /// <summary>
+        /// Every <see cref="SleepEvery"/> seconds while V1 plays: enemies far from V1 sleep, sleeping ones near it wake. A sleeping enemy's
+        /// object (what the Sandbox spawned, its parts with it) is switched off where it is; switched on again, it carries on from there.
+        /// </summary>
+        private static void SleepAndWake(EnemyTracker tracker, NewMovement player)
+        {
+            if (Time.unscaledTime < nextSleep || player == null)
+            {
+                return;
+            }
+
+            nextSleep = Time.unscaledTime + SleepEvery;
+            Vector3 v1 = player.transform.position;
+            Woken.Clear();
+            foreach (KeyValuePair<EnemyIdentifier, GameObject> e in Asleep)
+            {
+                if (e.Key == null || e.Value == null || e.Key.dead)
+                {
+                    Woken.Add(e.Key);
+                }
+                else if (!SleepOn || Within(e.Key.transform.position, v1, WakeAcross, WakeUpDown))
+                {
+                    Woken.Add(e.Key);
+                    e.Value.SetActive(true);
+                    Coords.ToMinecraft(e.Key.transform.position, out double x, out double y, out double z);
+                    Plugin.Log.LogInfo("enemies: " + e.Key.enemyType + " wakes up, V1 is near again (at " + x.ToString("0.0") + " " + y.ToString("0.0") + " " + z.ToString("0.0") + ")");
+                }
+            }
+
+            foreach (EnemyIdentifier eid in Woken)
+            {
+                Asleep.Remove(eid);
+            }
+
+            if (!SleepOn)
+            {
+                return;
+            }
+
+            foreach (EnemyIdentifier eid in tracker.enemies)
+            {
+                if (eid == null || eid.dead || !eid.gameObject.activeInHierarchy || Asleep.ContainsKey(eid) || eid.GetComponent<StandIn>() != null
+                    || Within(eid.transform.position, v1, SleepAcross, SleepUpDown))
+                {
+                    continue;
+                }
+
+                var spawned = eid.GetComponentInParent<Sandbox.EnemySpawnableInstance>();
+                GameObject go = spawned != null ? spawned.gameObject : eid.gameObject;
+                Asleep[eid] = go;
+                Coords.ToMinecraft(eid.transform.position, out double x, out double y, out double z);
+                Coords.ToMinecraft(v1, out double vx, out double vy, out double vz);
+                Plugin.Log.LogInfo("enemies: " + eid.enemyType + " goes to sleep at " + x.ToString("0.0") + " " + y.ToString("0.0") + " " + z.ToString("0.0") + ", "
+                    + System.Math.Max(System.Math.Abs(x - vx), System.Math.Abs(z - vz)).ToString("0") + " blocks across and " + System.Math.Abs(y - vy).ToString("0")
+                    + " up or down from V1 (past the blocks ULTRAKILL has)");
+                go.SetActive(false);
+            }
+        }
+
+        /// <summary>Within <paramref name="across"/> blocks of V1 east-west and north-south, and <paramref name="upDown"/> up or down.</summary>
+        private static bool Within(Vector3 enemy, Vector3 v1, float across, float upDown)
+        {
+            Vector3 d = (enemy - v1) / Coords.Scale;
+            return Mathf.Abs(d.x) <= across && Mathf.Abs(d.z) <= across && Mathf.Abs(d.y) <= upDown;
         }
 
         /// <summary>
@@ -70,6 +184,11 @@ namespace UKPassthrough
             if (tracker == null || blocks == null)
             {
                 return;
+            }
+
+            if (!late)
+            {
+                SleepAndWake(tracker, player);
             }
 
             bool listing = !late && Time.unscaledTime >= nextKeep;

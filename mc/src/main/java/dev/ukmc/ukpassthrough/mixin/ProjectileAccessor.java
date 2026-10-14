@@ -12,4 +12,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface ProjectileAccessor {
 	@Accessor("leftOwner")
 	void ukpassthrough$setLeftOwner(boolean left);
+
+	/** Whether it has flown clear of its owner (ShulkerBulletMixin). */
+	@Accessor("leftOwner")
+	boolean ukpassthrough$leftOwner();
 }

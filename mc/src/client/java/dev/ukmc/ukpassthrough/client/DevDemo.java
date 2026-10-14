@@ -2,6 +2,7 @@ package dev.ukmc.ukpassthrough.client;
 
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.platform.InputConstants;
+import dev.ukmc.ukpassthrough.Knocked;
 import dev.ukmc.ukpassthrough.UKPassthrough;
 import dev.ukmc.ukpassthrough.client.mixin.AbstractContainerScreenAccessor;
 import dev.ukmc.ukpassthrough.client.mixin.CreativeModeInventoryScreenInvoker;
@@ -290,11 +291,17 @@ import org.joml.Vector3f;
  * noclip (still, east at 20 blocks a second, back west at 50) while both sides log their slow frames and what the blocks cost; then
  * Minos Prime, V2, the Mindflayer and Sisyphus Prime each fight V1 on Nether ground, V1 goes 100 blocks away and back, and ULTRAKILL
  * logs where each of them is; last, V2 is left behind as V1 goes to the overworld.
+ * <p>
+ * With UKPASSTHROUGH_DEMO=45: round 33, the players' reports. On a stone field in survival: V1's revolver in custom colours in first and
+ * third person, a husk set alight by ULTRAKILL's fire, a shulker's bullets, impact frames with a pig falling (the old way and the new),
+ * the Whiplash on a zombie (old and new) and on a Filth, Knuckleblaster uppercuts (old and new) and a slam onto a husk in the air, a
+ * rocket at a husk in the air and on the ground, nails with the Electric railcannon and with a zap, a Stray left 100 blocks behind
+ * (old and new), and V1 put below the world.
  */
 final class DevDemo {
 	// List.of(...).contains(null) throws: without the variable (every normal start) the mod didn't load
 	private static final boolean ENABLED = System.getenv("UKPASSTHROUGH_DEMO") != null
-		&& List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44").contains(System.getenv("UKPASSTHROUGH_DEMO"));
+		&& List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45").contains(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean STAINS_AND_PARRIES = "2".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean LIGHT_AND_NETHER = "3".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean HUD_AND_HURT = "4".equals(System.getenv("UKPASSTHROUGH_DEMO"));
@@ -338,6 +345,7 @@ final class DevDemo {
 	private static final boolean ROUND30 = "42".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean ROUND31 = "43".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	private static final boolean ROUND32 = "44".equals(System.getenv("UKPASSTHROUGH_DEMO"));
+	private static final boolean ROUND33 = "45".equals(System.getenv("UKPASSTHROUGH_DEMO"));
 	/** Demo 16: the largest gap between Steve's yaw and the first-person item's lagging yaw while V1 turned, and when. */
 	private static float largestSway;
 	private static int largestSwayAt;
@@ -393,7 +401,7 @@ final class DevDemo {
 			step = -1;
 		}
 
-		if ((ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31 || ROUND32) && minecraft.player != null && minecraft.player.isDeadOrDying() && minecraft.gui.screen() instanceof net.minecraft.client.gui.screens.DeathScreen) {
+		if ((ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31 || ROUND32 || ROUND33) && minecraft.player != null && minecraft.player.isDeadOrDying() && minecraft.gui.screen() instanceof net.minecraft.client.gui.screens.DeathScreen) {
 			// Steve died while the test world waited for ULTRAKILL (mobs at night): back to life first
 			minecraft.player.respawn();
 			minecraft.gui.setScreen(null);
@@ -409,7 +417,7 @@ final class DevDemo {
 				placed = true;
 				String command = String.format(Locale.ROOT, "tp @a 17.5 %d 182.5 -90 0", y);
 				server.execute(() -> server.getCommands().performPrefixedCommand(server.createCommandSourceStack().withSuppressedOutput(), command));
-				if (ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31 || ROUND32) {
+				if (ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31 || ROUND32 || ROUND33) {
 					// nothing to kill Steve while the world waits for ULTRAKILL
 					server.execute(() -> server.getCommands().performPrefixedCommand(server.createCommandSourceStack().withSuppressedOutput(), "difficulty peaceful"));
 				}
@@ -429,9 +437,12 @@ final class DevDemo {
 
 		// a player at the keys, as far as Minecraft's lower frame rate for nobody playing goes (the script's input isn't real)
 		minecraft.getFramerateLimitTracker().onInputReceived();
-		if (STAINS_AND_PARRIES || LIGHT_AND_NETHER || HUD_AND_HURT || FIRE_AND_WHIPLASH || SPREAD_AND_RESPAWN || WATER_AND_PORTALS || OCEAN || THIRD_PERSON || FEEL_AND_LIGHT || EXPLOSIONS || RULES || PUNCHES || GROUND_AND_MOBS || INVENTORY_AND_HAND || BLOOD_AND_TURNING || PORTRAIT_AND_STRIKES || REACH_AND_LAUNCHES || PARRY_OTHERS || SANDBOX_ARM || ROUND18 || ROUND19 || ROUND20 || ROUND21 || ROUND22 || ROUND23 || ROUND24 || ROUND24B || ROUND24C || ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31 || ROUND32) {
+		if (STAINS_AND_PARRIES || LIGHT_AND_NETHER || HUD_AND_HURT || FIRE_AND_WHIPLASH || SPREAD_AND_RESPAWN || WATER_AND_PORTALS || OCEAN || THIRD_PERSON || FEEL_AND_LIGHT || EXPLOSIONS || RULES || PUNCHES || GROUND_AND_MOBS || INVENTORY_AND_HAND || BLOOD_AND_TURNING || PORTRAIT_AND_STRIKES || REACH_AND_LAUNCHES || PARRY_OTHERS || SANDBOX_ARM || ROUND18 || ROUND19 || ROUND20 || ROUND21 || ROUND22 || ROUND23 || ROUND24 || ROUND24B || ROUND24C || ROUND25 || ROUND25B || ROUND25C || ROUND25D || ROUND26 || ROUND27 || ROUND27B || ROUND28 || ROUND28B || ROUND29 || ROUND29B || ROUND29C || ROUND30 || ROUND31 || ROUND32 || ROUND33) {
 			punchWhenClose(minecraft, step);
-			if (ROUND32) {
+			if (ROUND33) {
+				aimTick();
+				round33(minecraft, step++);
+			} else if (ROUND32) {
 				aimTick();
 				round32(minecraft, step++);
 			} else if (ROUND31) {
@@ -3394,6 +3405,472 @@ final class DevDemo {
 		}).join();
 	}
 
+	/** Demo 45: the mob a part of the test is about (the server's), the frames logged after an impact frame, and what they saw. */
+	private static int r33Mob = -1;
+	private static long r33FramesUntil;
+	private static final StringBuilder r33Frames = new StringBuilder();
+
+	/**
+	 * Demo 45: round 33, the players' reports. On a stone field in survival (V1 at 5% damage taken): V1's gun in custom colours in first and
+	 * third person; a husk set alight by ULTRAKILL's fire; a shulker shooting at V1; impact frames (a pig falling meanwhile) the old way
+	 * and the new; the Whiplash on a zombie the old way and the new, and on ULTRAKILL's Filth; a Knuckleblaster uppercut and a ground
+	 * slam onto a husk in the air (splatters); a rocket at a husk in the air and on the ground; nails and a zap (conduction); a Stray
+	 * left 100 blocks behind (asleep) the old way and the new; V1 put below the world.
+	 */
+	private static void round33(final Minecraft minecraft, final int at) {
+		V1State.Pose p = V1State.live();
+		int x = base == null ? 0 : base.getX(), y = base == null ? 0 : base.getY(), z = base == null ? 0 : base.getZ();
+		switch (at) {
+			case 0 -> {
+				command(minecraft, "gamemode survival @p");
+				command(minecraft, "time set noon");
+				command(minecraft, "weather clear");
+				command(minecraft, "difficulty normal");
+				command(minecraft, "kill @e[type=!minecraft:player,distance=..120]");
+				command(minecraft, "effect clear @p");
+				minecraft.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+				if (p != null) {
+					base = BlockPos.containing(p.fx(), p.fy() + 0.01, p.fz());
+					x = base.getX();
+					y = base.getY();
+					z = base.getZ();
+					command(minecraft, String.format(Locale.ROOT, "fill %d %d %d %d %d %d minecraft:stone", x - 30, y - 1, z - 30, x + 30, y - 1, z + 30));
+					command(minecraft, String.format(Locale.ROOT, "fill %d %d %d %d %d %d minecraft:air", x - 30, y, z - 30, x + 30, y + 15, z + 30));
+					command(minecraft, String.format(Locale.ROOT, "fill %d %d %d %d %d %d minecraft:air", x - 30, y + 16, z - 30, x + 30, y + 30, z + 30));
+				}
+
+				ModSettings.Values s = ModSettings.get();
+				s.allWeapons = true;
+				s.removeWeapons = false;
+				s.progression = false;
+				s.loadout.clear();
+				s.loadoutOrder.clear();
+				s.gunColors.clear();
+				// the revolver's custom colours: red, green, blue (the user's "weapon skin" in third person)
+				s.gunColors.put("gunColorType.1", new com.google.gson.JsonPrimitive(true));
+				float[][] colours = {{1.0F, 0.1F, 0.1F}, {0.1F, 1.0F, 0.1F}, {0.1F, 0.2F, 1.0F}};
+				for (int i = 0; i < 3; i++) {
+					s.gunColors.put("gunColor.1." + (i + 1) + ".r", new com.google.gson.JsonPrimitive(colours[i][0]));
+					s.gunColors.put("gunColor.1." + (i + 1) + ".g", new com.google.gson.JsonPrimitive(colours[i][1]));
+					s.gunColors.put("gunColor.1." + (i + 1) + ".b", new com.google.gson.JsonPrimitive(colours[i][2]));
+					s.gunColors.put("gunColor.1." + (i + 1) + ".a", new com.google.gson.JsonPrimitive(1.0F));
+				}
+
+				ModSettings.changed();
+				HitStops.off = false;
+				Knocked.enabled = true;
+			}
+			case 1 -> debug("assist", "major", 1, "damage", 0.05);
+			case 5 -> tpTo(minecraft, 0.5, 0.0, 0.5);
+			// part A: the gun's colours, first person and third
+			case 40 -> debug("weapon", "slot", 1, "variation", 0);
+			case 70 -> {
+				debug("bodyguns", "", 0, "", 0);
+				shot(minecraft, "A1 first person, the revolver in custom colours (red, green, blue)");
+			}
+			case 75 -> minecraft.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_BACK);
+			case 100 -> {
+				debug("bodyguns", "", 0, "", 0);
+				shot(minecraft, "A2 third person behind, the revolver");
+			}
+			case 105 -> minecraft.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT);
+			case 130 -> shot(minecraft, "A3 third person in front, the revolver");
+			case 135 -> minecraft.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+			// part B: a husk set alight by ULTRAKILL's fire (the box players saw)
+			case 150 -> loudCommand(minecraft, String.format(Locale.ROOT, "summon minecraft:husk %d.5 %d %d.5 {NoAI:1b,PersistenceRequired:1b,Rotation:[90f,0f],Health:300f,attributes:[{id:\"minecraft:max_health\",base:300.0}]}", x + 4, y, z));
+			case 160 -> aimAt = new Vec3(x + 4.5, y + 1.0, z + 0.5);
+			case 180 -> shot(minecraft, "B1 the husk before the fire");
+			case 185 -> debug("mobstate", "burn", 10, "label", "set alight");
+			case 205 -> {
+				debug("mobstate", "label", "burning", "", 0);
+				shot(minecraft, "B2 the husk burning (ULTRAKILL's fire and Minecraft's)");
+			}
+			case 210 -> minecraft.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_BACK);
+			case 230 -> shot(minecraft, "B3 the husk burning, third person");
+			case 235 -> minecraft.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+			case 250 -> {
+				command(minecraft, "kill @e[type=minecraft:husk]");
+				aimAt = null;
+			}
+			// part C: a shulker shooting at V1
+			case 260 -> {
+				loudCommand(minecraft, String.format(Locale.ROOT, "summon minecraft:shulker %d %d %d {PersistenceRequired:1b}", x + 8, y, z));
+				log("C a shulker 8 blocks east: its bullets should hit V1 (and lift it)");
+			}
+			case 300, 340, 380, 420, 460, 500, 540 -> logPlayer(minecraft, "C shulker");
+			case 560 -> {
+				command(minecraft, "kill @e[type=minecraft:shulker]");
+				command(minecraft, "kill @e[type=minecraft:shulker_bullet]");
+				command(minecraft, "effect clear @p");
+			}
+			case 570 -> tpTo(minecraft, 0.5, 0.0, 0.5);
+			// part D: impact frames, with a pig falling meanwhile; the old way, then the new
+			case 600 -> {
+				HitStops.off = true;
+				loudCommand(minecraft, String.format(Locale.ROOT, "summon minecraft:pig %d.5 %d %d.5 {PersistenceRequired:1b}", x + 6, y + 25, z));
+				log("D1 a pig falling 6 blocks east; ULTRAKILL's impact frame the old way (Minecraft not frozen)");
+			}
+			case 615 -> {
+				r33Mob = nearest(minecraft, "pig");
+				r33FramesUntil = System.currentTimeMillis() + 700L;
+				r33Frames.setLength(0);
+				debug("hitstop", "s", 0.3, "true", 1);
+			}
+			case 640 -> log("D1 frames after the impact frame (old way):" + r33Frames);
+			case 650 -> command(minecraft, "kill @e[type=minecraft:pig]");
+			case 660 -> {
+				HitStops.off = false;
+				loudCommand(minecraft, String.format(Locale.ROOT, "summon minecraft:pig %d.5 %d %d.5 {PersistenceRequired:1b}", x + 6, y + 25, z));
+				log("D2 the same with Minecraft frozen too");
+			}
+			case 675 -> {
+				r33Mob = nearest(minecraft, "pig");
+				r33FramesUntil = System.currentTimeMillis() + 700L;
+				r33Frames.setLength(0);
+				debug("hitstop", "s", 0.3, "true", 1);
+			}
+			case 700 -> log("D2 frames after the impact frame (new way):" + r33Frames);
+			case 710 -> command(minecraft, "kill @e[type=minecraft:pig]");
+			// part E: the Whiplash on a husk that walks at V1, the old way (no stun) and the new
+			case 720 -> {
+				Knocked.enabled = false;
+				loudCommand(minecraft, String.format(Locale.ROOT, "summon minecraft:husk %d.5 %d %d.5 {PersistenceRequired:1b,Rotation:[90f,0f],Health:200f,attributes:[{id:\"minecraft:max_health\",base:200.0}]}", x + 12, y, z));
+				log("E1 a husk 12 blocks east; the Whiplash the old way (no stun)");
+			}
+			case 730 -> {
+				r33Mob = nearest(minecraft, "husk");
+				aimAt = new Vec3(x + 12.5, y + 1.2, z + 0.5);
+			}
+			case 745 -> logMob(minecraft, "E1 before the whiplash");
+			case 746 -> InputForwarder.key(InputConstants.KEY_R, true);
+			case 748 -> {
+				InputForwarder.key(InputConstants.KEY_R, false);
+				log("E1 whiplash thrown");
+			}
+			case 752, 756, 760, 764, 768, 772, 776, 780, 784, 788, 792, 796, 800, 808, 816, 824, 832, 840 -> logMob(minecraft, "E1");
+			case 850 -> {
+				command(minecraft, "kill @e[type=minecraft:husk]");
+				tpTo(minecraft, 0.5, 0.0, 0.5);
+			}
+			case 870 -> {
+				Knocked.enabled = true;
+				loudCommand(minecraft, String.format(Locale.ROOT, "summon minecraft:husk %d.5 %d %d.5 {PersistenceRequired:1b,Rotation:[90f,0f],Health:200f,attributes:[{id:\"minecraft:max_health\",base:200.0}]}", x + 12, y, z));
+				log("E2 a husk 12 blocks east; the Whiplash the new way (stunned)");
+			}
+			case 880 -> {
+				r33Mob = nearest(minecraft, "husk");
+				aimAt = new Vec3(x + 12.5, y + 1.2, z + 0.5);
+			}
+			case 895 -> logMob(minecraft, "E2 before the whiplash");
+			case 896 -> InputForwarder.key(InputConstants.KEY_R, true);
+			case 898 -> {
+				InputForwarder.key(InputConstants.KEY_R, false);
+				log("E2 whiplash thrown");
+			}
+			case 902, 906, 910, 914, 918, 922, 926, 930, 934, 938, 942, 946, 950, 958, 966, 974, 982, 990 -> logMob(minecraft, "E2");
+			case 1000 -> {
+				command(minecraft, "kill @e[type=minecraft:husk]");
+				tpTo(minecraft, 0.5, 0.0, 0.5);
+			}
+			// part F: the Whiplash on ULTRAKILL's own Filth
+			case 1020 -> {
+				// still (its Ignore Player): it waits there to be caught
+				ukSpawn("Filth", x + 12.5, y, z + 0.5, 90.0F, true);
+				log("F a Filth 12 blocks east, for the Whiplash");
+			}
+			case 1030 -> aimAt = new Vec3(x + 12.5, y + 1.0, z + 0.5);
+			case 1060 -> {
+				JsonObject trace = UkLink.type("debug");
+				trace.addProperty("what", "enemyground");
+				trace.addProperty("label", "F the Filth whiplashed");
+				trace.addProperty("for", 2.5);
+				trace.addProperty("every", 0.1);
+				UkLink.get().send(trace);
+				InputForwarder.key(InputConstants.KEY_R, true);
+			}
+			case 1062 -> InputForwarder.key(InputConstants.KEY_R, false);
+			case 1130 -> {
+				debug("clearenemies", "", 0, "", 0);
+				tpTo(minecraft, 0.5, 0.0, 0.5);
+			}
+			// part G: splatters: a husk punched off a 12-block pillar by the Knuckleblaster, the old way and the new, then a ground slam
+			// onto a husk in the air
+			case 1135 -> command(minecraft, String.format(Locale.ROOT, "fill %d %d %d %d %d %d minecraft:stone", x + 3, y, z - 1, x + 5, y + 11, z + 1));
+			case 1140 -> {
+				Knocked.enabled = false;
+				loudCommand(minecraft, String.format(Locale.ROOT, "summon minecraft:husk %d.5 %d %d.5 %s", x + 5, y + 12, z, STILL_HUSK));
+				command(minecraft, String.format(Locale.ROOT, "tp @p %d.5 %d %d.5 -90 0", x + 3, y + 12, z));
+				log("G1 a husk on a 12-block pillar, punched off by the Knuckleblaster the old way");
+				aimAt = new Vec3(x + 5.5, y + 13.0, z + 0.5);
+				debug("arm", "v", 1, "", 0);
+			}
+			case 1170 -> {
+				r33Mob = nearest(minecraft, "husk");
+				logMob(minecraft, "G1 before the punch");
+				InputForwarder.key(InputConstants.KEY_F, true);
+			}
+			case 1172 -> InputForwarder.key(InputConstants.KEY_F, false);
+			case 1176, 1180, 1184, 1188, 1192, 1196, 1200, 1204, 1208, 1212, 1220, 1230, 1240 -> logMob(minecraft, "G1");
+			case 1250 -> command(minecraft, "kill @e[type=minecraft:husk]");
+			case 1260 -> {
+				Knocked.enabled = true;
+				loudCommand(minecraft, String.format(Locale.ROOT, "summon minecraft:husk %d.5 %d %d.5 %s", x + 5, y + 12, z, STILL_HUSK));
+				command(minecraft, String.format(Locale.ROOT, "tp @p %d.5 %d %d.5 -90 0", x + 3, y + 12, z));
+				log("G2 the same the new way (it should splatter where it lands)");
+				aimAt = new Vec3(x + 5.5, y + 13.0, z + 0.5);
+			}
+			case 1290 -> {
+				r33Mob = nearest(minecraft, "husk");
+				logMob(minecraft, "G2 before the punch");
+				InputForwarder.key(InputConstants.KEY_F, true);
+			}
+			case 1292 -> InputForwarder.key(InputConstants.KEY_F, false);
+			case 1296, 1300, 1304, 1308, 1312, 1316, 1320, 1324, 1328, 1332, 1340, 1350, 1360 -> logMob(minecraft, "G2");
+			case 1370 -> {
+				command(minecraft, "kill @e[type=minecraft:husk]");
+				command(minecraft, String.format(Locale.ROOT, "fill %d %d %d %d %d %d minecraft:air", x + 3, y, z - 1, x + 5, y + 11, z + 1));
+				debug("arm", "v", 0, "", 0);
+				tpTo(minecraft, 0.5, 0.0, 0.5);
+			}
+			case 1380 -> {
+				loudCommand(minecraft, String.format(Locale.ROOT, "summon minecraft:husk %d.5 %d %d.5 %s", x + 6, y, z, STILL_HUSK));
+				log("G3 a husk 6 blocks east, V1 20 blocks over it: the husk goes up, V1 slams onto it (it should splatter)");
+			}
+			// V1 put 20 blocks over the husk, falling; the husk sent up, and V1 slams onto it as it rises (put there 13 up, V1 had fallen past
+			// it before the slam in run 4; a slam pressed while V1 was still being put there didn't happen in run 5)
+			case 1390 -> {
+				r33Mob = nearest(minecraft, "husk");
+				aimAt = null;
+				command(minecraft, String.format(Locale.ROOT, "tp @p %d.5 %d %d.5 -90 89", x + 6, y + 20, z));
+			}
+			case 1400 -> launch(r33Mob, 0.0, 1.1, 0.0);
+			case 1404 -> {
+				InputForwarder.key(InputConstants.KEY_LCONTROL, true);
+				log("G3 the slam");
+			}
+			case 1402, 1406, 1408, 1410, 1412, 1414, 1416, 1418, 1420, 1424, 1428, 1432, 1440, 1450, 1460 -> logMob(minecraft, "G3");
+			case 1430 -> InputForwarder.key(InputConstants.KEY_LCONTROL, false);
+			case 1470 -> {
+				command(minecraft, "kill @e[type=minecraft:husk]");
+				tpTo(minecraft, 0.5, 0.0, 0.5);
+			}
+			// part H: a rocket at a husk in the air (ULTRAKILL's big red explosion), then at one on the ground
+			case 1480 -> debug("weapon", "slot", 5, "variation", 0);
+			case 1490 -> {
+				loudCommand(minecraft, String.format(Locale.ROOT, "summon minecraft:husk %d.5 %d %d.5 %s", x + 8, y, z, STILL_HUSK));
+				log("H1 a husk 8 blocks east, launched, and a rocket at it in the air");
+			}
+			case 1500 -> {
+				r33Mob = nearest(minecraft, "husk");
+				// where it'll be at the top of its flight (11 blocks up, about 15 ticks after the launch)
+				aimAt = new Vec3(x + 8.5, y + 11.8, z + 0.5);
+			}
+			case 1530 -> launch(r33Mob, 0.0, 1.5, 0.0);
+			case 1541 -> {
+				logMob(minecraft, "H1 as the rocket goes");
+				InputForwarder.button(1, true);
+			}
+			case 1543 -> {
+				InputForwarder.button(1, false);
+				log("H1 the rocket");
+			}
+			case 1550, 1560, 1580 -> logMob(minecraft, "H1");
+			case 1600 -> {
+				command(minecraft, "kill @e[type=minecraft:husk]");
+				loudCommand(minecraft, String.format(Locale.ROOT, "summon minecraft:husk %d.5 %d %d.5 %s", x + 8, y, z, STILL_HUSK));
+				log("H2 a husk 8 blocks east on the ground, and a rocket at it");
+			}
+			case 1610 -> {
+				r33Mob = nearest(minecraft, "husk");
+				aimAt = new Vec3(x + 8.5, y + 1.0, z + 0.5);
+			}
+			case 1640 -> InputForwarder.button(1, true);
+			case 1642 -> {
+				InputForwarder.button(1, false);
+				log("H2 the rocket");
+			}
+			case 1680 -> command(minecraft, "kill @e[type=minecraft:husk]");
+			// part I: conduction: nails into a husk, then the Electric railcannon; then nails and ULTRAKILL's zap
+			case 1690 -> {
+				loudCommand(minecraft, String.format(Locale.ROOT, "summon minecraft:husk %d.5 %d %d.5 {NoAI:1b,PersistenceRequired:1b,Rotation:[90f,0f],Health:1000f,attributes:[{id:\"minecraft:max_health\",base:1000.0}]}", x + 6, y, z));
+				log("I1 a husk 6 blocks east: nails into it, then the Electric railcannon");
+				weapon(3, 1, 0);
+			}
+			case 1700 -> aimAt = new Vec3(x + 6.5, y + 1.0, z + 0.5);
+			case 1720 -> InputForwarder.button(1, true);
+			case 1750 -> InputForwarder.button(1, false);
+			case 1760 -> debug("mobstate", "label", "I1 nails in", "", 0);
+			case 1765 -> debug("weapon", "slot", 4, "variation", 0);
+			case 1800 -> InputForwarder.button(1, true);
+			case 1802 -> {
+				InputForwarder.button(1, false);
+				log("I1 the railcannon");
+			}
+			case 1840 -> debug("mobstate", "label", "I1 after the railcannon", "", 0);
+			case 1850 -> weapon(3, 1, 0);
+			case 1870 -> InputForwarder.button(1, true);
+			case 1900 -> InputForwarder.button(1, false);
+			case 1905 -> debug("mobstate", "label", "I2 nails in again", "", 0);
+			case 1910 -> {
+				debug("zap", "", 0, "", 0);
+				log("I2 ULTRAKILL's zap");
+			}
+			case 1940 -> debug("mobstate", "label", "I2 after the zap", "", 0);
+			case 1950 -> {
+				command(minecraft, "kill @e[type=minecraft:husk]");
+				aimAt = null;
+				debug("weapon", "slot", 1, "variation", 0);
+			}
+			// part J: a Stray left 100 blocks behind, the old way (awake) and the new (asleep)
+			case 1980 -> {
+				debug("sleep", "on", 0, "", 0);
+				ukSpawn("Stray", x + 20.5, y, z + 0.5, 90.0F, false);
+				log("J1 a Stray 20 blocks east; V1 goes 100 blocks west with sleeping off (the old way)");
+			}
+			case 2040 -> {
+				command(minecraft, String.format(Locale.ROOT, "tp @p %d.5 %d %d.5 90 0", x - 100, overworldSurface(minecraft, x - 100, z), z));
+				debug("enemies", "", 0, "", 0);
+			}
+			case 2140 -> debug("enemies", "", 0, "", 0);
+			case 2150 -> {
+				debug("sleep", "on", 1, "", 0);
+				log("J2 sleeping on (the new way): the Stray should go to sleep");
+			}
+			case 2200 -> debug("enemies", "", 0, "", 0);
+			case 2260 -> {
+				tpTo(minecraft, 0.5, 0.0, 0.5);
+				log("J2 V1 back: the Stray should wake");
+			}
+			case 2320 -> debug("enemies", "", 0, "", 0);
+			case 2330 -> debug("clearenemies", "", 0, "", 0);
+			// part K: V1 below the world
+			case 2340 -> {
+				command(minecraft, String.format(Locale.ROOT, "tp @p %d.5 %d %d.5 -90 0", x, minecraft.level == null ? -80 : minecraft.level.getMinY() - 16, z));
+				log("K V1 put 16 blocks below the world");
+			}
+			case 2360, 2380, 2420, 2440, 2460 -> logPlayer(minecraft, "K");
+			case 2400 -> shot(minecraft, "K1 V1 below the world");
+			case 2480 -> shot(minecraft, "K2 V1 below the world, later");
+			case 2500, 2520, 2540 -> logPlayer(minecraft, "K");
+			case 2560 -> {
+				InputForwarder.key(InputConstants.KEY_R, true);
+				log("K R (respawn, if V1 died)");
+			}
+			case 2562 -> InputForwarder.key(InputConstants.KEY_R, false);
+			case 2600 -> logPlayer(minecraft, "K after R");
+			case 2620 -> tpTo(minecraft, 0.5, 0.0, 0.5);
+			case 2630 -> {
+				command(minecraft, "gamemode creative @p");
+				command(minecraft, String.format(Locale.ROOT, "tp @p %d.5 %d %d.5 -90 0", x, minecraft.level == null ? -80 : minecraft.level.getMinY() - 16, z));
+				log("K3 in creative, V1 put 16 blocks below the world again");
+			}
+			case 2650, 2670, 2690, 2710 -> logPlayer(minecraft, "K3");
+			case 2720 -> {
+				InputForwarder.key(InputConstants.KEY_R, true);
+				log("K3 R (respawn, if V1 died)");
+			}
+			case 2722 -> InputForwarder.key(InputConstants.KEY_R, false);
+			case 2760 -> {
+				logPlayer(minecraft, "K3 after R");
+				command(minecraft, "gamemode survival @p");
+				tpTo(minecraft, 0.5, 0.0, 0.5);
+			}
+			case 2800 -> {
+				ModSettings.Values s = ModSettings.get();
+				s.allWeapons = false;
+				s.gunColors.clear();
+				ModSettings.changed();
+				debug("assist", "major", 0, "damage", 1.0);
+				command(minecraft, "effect clear @p");
+				log("finished");
+				finished = true;
+			}
+			default -> {
+			}
+		}
+	}
+
+	/** Demo 45: ULTRAKILL's weapon in slot {@code slot}, of variation {@code variation}, the weapon itself ({@code alt} 0) or its alternate (1). */
+	private static void weapon(final int slot, final int variation, final int alt) {
+		JsonObject m = UkLink.type("debug");
+		m.addProperty("what", "weapon");
+		m.addProperty("slot", slot);
+		m.addProperty("variation", variation);
+		m.addProperty("alt", alt);
+		UkLink.get().send(m);
+	}
+
+	/** Demo 45: the nearest living mob of {@code type} to V1 on the client (its id is the server's too), or -1. */
+	private static int nearest(final Minecraft minecraft, final String type) {
+		V1State.Pose p = V1State.live();
+		if (minecraft.level == null || p == null) {
+			return -1;
+		}
+
+		net.minecraft.world.entity.LivingEntity best = null;
+		for (net.minecraft.world.entity.LivingEntity e : minecraft.level.getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class,
+			new net.minecraft.world.phys.AABB(p.fx() - 40.0, p.fy() - 40.0, p.fz() - 40.0, p.fx() + 40.0, p.fy() + 40.0, p.fz() + 40.0),
+			e -> e.isAlive() && net.minecraft.world.entity.EntityType.getKey(e.getType()).getPath().equals(type))) {
+			if (best == null || e.distanceToSqr(p.fx(), p.fy(), p.fz()) < best.distanceToSqr(p.fx(), p.fy(), p.fz())) {
+				best = e;
+			}
+		}
+
+		return best == null ? -1 : best.getId();
+	}
+
+	/** Demo 45: a launch of mob {@code id} as ULTRAKILL's slam shockwave sends one (blocks a tick), with what V1's launches do (Knocked). */
+	private static void launch(final int id, final double vx, final double vy, final double vz) {
+		JsonObject m = UkLink.type("launch");
+		m.addProperty("id", id);
+		com.google.gson.JsonArray f = new com.google.gson.JsonArray();
+		// MobHits.force: blocks a tick times 20000
+		f.add(vx * 20000.0);
+		f.add(vy * 20000.0);
+		f.add(vz * 20000.0);
+		m.add("f", f);
+		MobHits.onLaunch(m);
+		log(String.format(Locale.ROOT, "mob %d launched at %.2f blocks a tick up", id, vy));
+	}
+
+	/** Demo 45: the part's mob on the server: where, on its feet or not, its motion, health, stunned. */
+	private static void logMob(final Minecraft minecraft, final String label) {
+		IntegratedServer server = minecraft.getSingleplayerServer();
+		V1State.Pose p = V1State.live();
+		int id = r33Mob;
+		if (server == null || id < 0) {
+			return;
+		}
+
+		String state = server.submit(() -> {
+			net.minecraft.server.level.ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			net.minecraft.world.entity.Entity e = player.level().getEntity(id);
+			if (!(e instanceof net.minecraft.world.entity.LivingEntity l)) {
+				return "mob " + id + " is gone";
+			}
+
+			return String.format(Locale.ROOT, "mob %d at %.2f %.2f %.2f, %s, motion y %.2f, health %.1f%s%s, %.1f blocks from V1", id, l.getX(), l.getY(), l.getZ(), l.onGround() ? "on its feet" : "in the air",
+				l.getDeltaMovement().y, l.getHealth(), l.isDeadOrDying() ? " (dying)" : "", l instanceof net.minecraft.world.entity.Mob mob && Knocked.stunned(mob) ? ", stunned" : "",
+				p == null ? -1.0 : Math.sqrt(l.distanceToSqr(p.fx(), p.fy(), p.fz())));
+		}).join();
+		log(label + ": " + state);
+	}
+
+	/** Demo 45: the player on the server: health, effects, where, and V1's feet. */
+	private static void logPlayer(final Minecraft minecraft, final String label) {
+		IntegratedServer server = minecraft.getSingleplayerServer();
+		if (server == null) {
+			return;
+		}
+
+		String state = server.submit(() -> {
+			net.minecraft.server.level.ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			return String.format(Locale.ROOT, "Steve at %.2f %.2f %.2f, health %.1f, levitation %b", player.getX(), player.getY(), player.getZ(), player.getHealth(),
+				player.hasEffect(net.minecraft.world.effect.MobEffects.LEVITATION));
+		}).join();
+		log(label + ": " + state + ", V1 " + (V1State.fresh() ? "playing" : "not sending") + (UKPassthrough.v1Dead ? " (dead)" : ""));
+	}
+
 	private static void round30(final Minecraft minecraft, final int at) {
 		V1State.Pose p = V1State.live();
 		ModSettings.Values s = ModSettings.get();
@@ -5718,6 +6195,19 @@ final class DevDemo {
 
 	/** Every frame (demo 21): when the timed husk is first drawn higher than it stood. */
 	static void frame(final Minecraft minecraft, final float partialTick) {
+		// demo 45: a falling pig and Minecraft's clock, every frame or so after an impact frame
+		if (ROUND33 && r33FramesUntil != 0L && minecraft.level != null) {
+			long now = System.currentTimeMillis();
+			if (now > r33FramesUntil) {
+				r33FramesUntil = 0L;
+			} else {
+				net.minecraft.world.entity.Entity e = r33Mob < 0 ? null : minecraft.level.getEntity(r33Mob);
+				r33Frames.append(String.format(Locale.ROOT, " [%d ms: game time %d, pig %.2f%s]", now - (r33FramesUntil - 700L), minecraft.level.getGameTime(),
+					e == null ? Double.NaN : e.getPosition(minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(!minecraft.level.tickRateManager().isEntityFrozen(e))).y,
+					HitStops.frozen() ? ", frozen" : ""));
+			}
+		}
+
 		if (!ROUND18 || launchMob < 0 || minecraft.level == null) {
 			return;
 		}

@@ -33,7 +33,7 @@ namespace UKPassthrough
         private const int LimbLayer = 10;
         /// <summary>ULTRAKILL's "EnemyTrigger" layer, an enemy's own collider: the Whiplash catches enemies there, and V1 can jump off them.</summary>
         private const int EnemyTriggerLayer = 12;
-        /// <summary>{"t":"mobs","m":[id, x, y, z, width, height, eye height, health, flags (1: on fire, 2: the Feedbacker uses it), ...]}</summary>
+        /// <summary>{"t":"mobs","m":[id, x, y, z, width, height, eye height, health, flags (1: on fire, 2: the Feedbacker uses it, 4: in the air off its feet), ...]}</summary>
         private const int Stride = 9;
         /// <summary>
         /// Width x width x height in blocks from which a mob counts as heavy: the Whiplash pulls V1 to it, as to one of
@@ -82,6 +82,9 @@ namespace UKPassthrough
         /// <summary>A push without damage smaller than this (ULTRAKILL's force) isn't worth a message.</summary>
         private const float LaunchMin = 100f;
 
+        private static readonly HarmonyLib.AccessTools.FieldRef<EnemyIdentifier, GameObject> AfterShockSourceWeapon = HarmonyLib.AccessTools.FieldRefAccess<EnemyIdentifier, GameObject>("afterShockSourceWeapon");
+        private static readonly HarmonyLib.AccessTools.FieldRef<EnemyIdentifier, bool> WaterOnlyAftershock = HarmonyLib.AccessTools.FieldRefAccess<EnemyIdentifier, bool>("waterOnlyAftershock");
+
         private readonly Link link;
         private readonly BlockWorld blocks;
         private readonly Dictionary<int, StandIn> standIns = new Dictionary<int, StandIn>();
@@ -102,6 +105,8 @@ namespace UKPassthrough
             public string Hitter;
             public string Limb;
             public GameObject SourceWeapon;
+            /// <summary>The mob was in the air when it was hit (round 33): ULTRAKILL's air bonuses.</summary>
+            public bool Airborne;
         }
 
         public Mobs(Link link, BlockWorld blocks)
@@ -144,6 +149,7 @@ namespace UKPassthrough
 
                 s.Track(feet, hp, (flags & 1) != 0);
                 s.Usable = (flags & 2) != 0;
+                s.Airborne = (flags & 4) != 0;
             }
 
             this.gone.Clear();
@@ -190,8 +196,74 @@ namespace UKPassthrough
                 if (style != null)
                 {
                     style.HitCalculator(hit.Hitter, s.Big ? "spider" : "zombie", hit.Limb, dead, s.Eid, hit.SourceWeapon);
+                    if (hit.Airborne)
+                    {
+                        AirStyle(style, hit.Hitter, dead, s.Eid, hit.SourceWeapon);
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// A hit on a mob in the air (round 33): ULTRAKILL's bonuses for its own enemies off the ground (Enemy.SendStyleInformation):
+        /// a kill by an explosion or a railcannon "FIREWORKS", by a ground slam "AIR SLAM", by anything else "AIRSHOT"; an explosion or
+        /// a railcannon that doesn't kill "JUGGLE".
+        /// </summary>
+        private static void AirStyle(StyleCalculator style, string hitter, bool dead, EnemyIdentifier eid, GameObject sourceWeapon)
+        {
+            bool blast = hitter == "explosion" || hitter == "ffexplosion" || hitter == "railcannon";
+            if (dead)
+            {
+                if (blast)
+                {
+                    style.shud.AddPoints(120, "ultrakill.fireworks", sourceWeapon, eid);
+                }
+                else if (hitter == "ground slam")
+                {
+                    style.shud.AddPoints(160, "ultrakill.airslam", sourceWeapon, eid);
+                }
+                else if (hitter != "fire" && hitter != "deathzone")
+                {
+                    style.shud.AddPoints(50, "ultrakill.airshot", sourceWeapon, eid);
+                }
+            }
+            else if (blast)
+            {
+                style.shud.AddPoints(20, "ultrakill.fireworksweak", sourceWeapon, eid);
+            }
+        }
+
+        /// <summary>
+        /// {"t":"splat","id":mob} (round 33): a light mob V1 knocked into the air landed hard in Minecraft and died of it (Knocked.java),
+        /// as ULTRAKILL's husks splatter landing at 50 units a second: its splatter of gore and "SPLATTERED", a kill.
+        /// </summary>
+        public void OnSplat(JObject m)
+        {
+            int id = (int?)m["id"] ?? -1;
+            this.standIns.TryGetValue(id, out StandIn s);
+            if (s == null)
+            {
+                Plugin.Log.LogDebug("splat: mob " + id + " has no stand-in (out of range or gone)");
+                return;
+            }
+
+            s.Splatter();
+            StyleHUD hud = MonoSingleton<StyleHUD>.Instance;
+            StyleCalculator style = MonoSingleton<StyleCalculator>.Instance;
+            PlayerTracker tracker = MonoSingleton<PlayerTracker>.Instance;
+            if (hud != null && style != null && (tracker == null || tracker.playerType != PlayerType.Platformer))
+            {
+                hud.AddPoints(100, "ultrakill.splattered", null, s.Eid);
+                GunControl guns = MonoSingleton<GunControl>.Instance;
+                if (guns != null)
+                {
+                    guns.AddKill();
+                }
+
+                style.AddToMultiKill();
+            }
+
+            Plugin.Log.LogInfo("splat: mob " + id + " splattered landing in Minecraft: +100 style \"SPLATTERED\"");
         }
 
         /// <summary>
@@ -548,6 +620,7 @@ namespace UKPassthrough
             this.standIns.Clear();
             this.pending.Clear();
             this.root = null;
+            HiddenFires.Clear();
         }
 
         /// <summary>
@@ -624,6 +697,48 @@ namespace UKPassthrough
             this.link.Send(new JObject { ["t"] = "oil", ["id"] = s.Id, ["f"] = fuel });
         }
 
+        /// <summary>Fires on stand-ins whose look is switched off (they're ULTRAKILL's pooled fires, used again elsewhere later).</summary>
+        private static readonly HashSet<GameObject> HiddenFires = new HashSet<GameObject>();
+        private static readonly List<Renderer> FireRenderers = new List<Renderer>();
+
+        /// <summary>
+        /// After Flammable.Burn: ULTRAKILL's fire on a stand-in's hitbox isn't drawn (round 33, a player's report: "when minecraft enemies are
+        /// set on fire via ultrakill fire, there is an odd box around the enemy"). Its sprite is sized to the hitbox, about twice the mob's
+        /// height, and the mob's depth box hid the part of it behind the mob's front: flames all round with a box cut out of them. The mob
+        /// burns in Minecraft as well (ULTRAKILL's fire hits set it alight there), and Minecraft draws its flames on its real shape; the
+        /// fire's light, sound and damage stay ULTRAKILL's.
+        /// </summary>
+        public static void HideFire(Flammable f)
+        {
+            GameObject fire = f.currentFire;
+            if (fire == null || HiddenFires.Contains(fire) || f.GetComponentInParent<StandIn>() == null)
+            {
+                return;
+            }
+
+            HiddenFires.Add(fire);
+            fire.GetComponentsInChildren(true, FireRenderers);
+            foreach (Renderer r in FireRenderers)
+            {
+                r.enabled = false;
+            }
+        }
+
+        /// <summary>Before a fire goes back to ULTRAKILL's pool: one hidden on a stand-in is drawn again for its next use.</summary>
+        public static void ShowFire(GameObject fire)
+        {
+            if (fire == null || !HiddenFires.Remove(fire))
+            {
+                return;
+            }
+
+            fire.GetComponentsInChildren(true, FireRenderers);
+            foreach (Renderer r in FireRenderers)
+            {
+                r.enabled = true;
+            }
+        }
+
         /// <summary>A hit on a stand-in (from the DeliverDamage patch): ULTRAKILL's damage formula, then off to Minecraft.</summary>
         public void Hit(StandIn s, GameObject target, Vector3 force, float multiplier, float critMultiplier, GameObject sourceWeapon, bool fromExplosion)
         {
@@ -663,12 +778,43 @@ namespace UKPassthrough
             this.SendHit(s, damage, head, hitter, fromExplosion, force, sourceWeapon, parry, by);
         }
 
+        /// <summary>
+        /// Conduction (round 33, a player's report: "conduction does not work on minecraft enemies"): electricity (the Electric railcannon,
+        /// a zap) on a mob with nails or magnets stuck in it, or standing in water, goes through it as through ULTRAKILL's own enemies
+        /// (EnemyIdentifier.DeliverDamage): its nails light up, and half a second later they burst out bloody, the shock jumps to the
+        /// enemies and mobs near it (ULTRAKILL's Aftershock and EnemyIdentifier.Zap: 2 each, a fraction on one zapped in the last 5 s) and
+        /// "CONDUCTOR". A stand-in's hits skip ULTRAKILL's damage code, which is where it starts: this runs from the DeliverDamage patch.
+        /// </summary>
+        public static void Conduct(EnemyIdentifier eid, GameObject sourceWeapon)
+        {
+            if (eid.beingZapped || eid.dead || !eid.hitterAttributes.Contains(HitterAttribute.Electricity) || eid.hitter == "aftershock"
+                || (eid.nailsAmount <= 0 && eid.stuckMagnets.Count <= 0 && eid.touchingWaters.Count <= 0))
+            {
+                return;
+            }
+
+            eid.beingZapped = true;
+            foreach (Nail nail in eid.nails)
+            {
+                if (nail != null)
+                {
+                    nail.Zap();
+                }
+            }
+
+            AfterShockSourceWeapon(eid) = sourceWeapon;
+            WaterOnlyAftershock(eid) = eid.nailsAmount == 0 && eid.stuckMagnets.Count == 0;
+            Plugin.Log.LogInfo("conduction: electricity (" + eid.hitter + ") through a mob with " + eid.nailsAmount + " nails, " + eid.stuckMagnets.Count + " magnets"
+                + (eid.touchingWaters.Count > 0 ? ", in water" : "") + ": the aftershock comes in 0.5 s");
+            eid.DelayedAfterShock(0.5f, eid.overrideCenter != null ? eid.overrideCenter.position : eid.transform.position);
+        }
+
         /// <summary>A hit to Minecraft ({"t":"hit",...,"by":ULTRAKILL's enemy for hitter "enemy"}), answered by a "hitres" (<see cref="OnHitResult"/>).</summary>
         private void SendHit(StandIn s, float damage, bool head, string hitter, bool fromExplosion, Vector3 force, GameObject sourceWeapon, bool parry, int by)
         {
             int hid = ++this.nextHit;
-            Plugin.Log.LogDebug("hit " + hid + ": mob " + s.Id + ", " + damage.ToString("0.###") + " (" + hitter + (head ? ", head" : "") + (parry ? ", parry" : "") + (by != 0 ? ", by " + by : "") + ")");
-            this.pending[hid] = new PendingHit { Mob = s.Id, Hitter = hitter, Limb = head ? "head" : "body", SourceWeapon = sourceWeapon };
+            Plugin.Log.LogDebug("hit " + hid + ": mob " + s.Id + ", " + damage.ToString("0.###") + " (" + hitter + (head ? ", head" : "") + (parry ? ", parry" : "") + (by != 0 ? ", by " + by : "") + (s.Airborne ? ", in the air" : "") + ")");
+            this.pending[hid] = new PendingHit { Mob = s.Id, Hitter = hitter, Limb = head ? "head" : "body", SourceWeapon = sourceWeapon, Airborne = s.Airborne };
             Coords.ToMinecraftDirection(force, out double fx, out double fy, out double fz);
             var m = new JObject
             {
@@ -745,6 +891,8 @@ namespace UKPassthrough
             GameObject bodyBox = this.Box(go, "Body", new Vector3(0f, headBottom / 2f, 0f) * scale, new Vector3(w, headBottom, w) * scale);
             GameObject headBox = this.Box(go, "Head", new Vector3(0f, (headBottom + h) / 2f, 0f) * scale, new Vector3(headWidth, h - headBottom, headWidth) * scale);
             eid.weakPoint = headBox;
+            // the middle of its body, where ULTRAKILL's shocks jump to and from (EnemyIdentifier.Zap) and its enemies aim (as Infighting's targets)
+            eid.overrideCenter = bodyBox.transform;
 
             Transform box = null;
             if (this.blocks.MobOccluder != null)
@@ -828,6 +976,9 @@ namespace UKPassthrough
 
         /// <summary>A right click with an empty hand does something to it in Minecraft (a villager): the Feedbacker uses it instead of hitting it (see <see cref="Punches.UseMob"/>).</summary>
         public bool Usable { get; set; }
+
+        /// <summary>In the air off its feet in Minecraft (round 33): ULTRAKILL's rockets go off bigger on it, its kills there score the air bonuses.</summary>
+        public bool Airborne { get; set; }
 
         /// <summary>The most gasoline on any of its hitboxes (ULTRAKILL's fuel, 0 to 5).</summary>
         public float Fuel
@@ -995,6 +1146,14 @@ namespace UKPassthrough
             {
                 this.Ignite();
             }
+
+            // a rocket that hits one of ULTRAKILL's enemies in the air (its ground check off the ground) or one that has only just appeared
+            // goes off as its big red explosion (Grenade.Collision); a stand-in has no ground check, so one in the air counts as just
+            // appeared, the only thing ULTRAKILL asks of that time
+            if (this.Airborne && !this.Eid.dead)
+            {
+                this.Eid.timeSinceSpawned = 0f;
+            }
         }
 
         /// <summary>
@@ -1069,6 +1228,38 @@ namespace UKPassthrough
 
                 splatter.GetReady();
             }
+        }
+
+        /// <summary>
+        /// It splattered landing in Minecraft (round 33): ULTRAKILL's splatter of gore a little above its feet (EnemyIdentifier.Splatter), then
+        /// its death.
+        /// </summary>
+        public void Splatter()
+        {
+            BloodsplatterManager bsm = MonoSingleton<BloodsplatterManager>.Instance;
+            GameObject gore = bsm != null ? bsm.GetGore(GoreType.Splatter, this.Eid) : null;
+            if (gore != null)
+            {
+                gore.transform.position = this.transform.position + Vector3.up;
+                GoreZone gz = this.Eid.GetGoreZone();
+                if (gz != null && gz.goreZone != null)
+                {
+                    gore.transform.SetParent(gz.goreZone, worldPositionStays: true);
+                }
+
+                if (gore.TryGetComponent(out Bloodsplatter splatter))
+                {
+                    splatter.GetReady();
+                }
+            }
+
+            CameraController cc = MonoSingleton<CameraController>.Instance;
+            if (cc != null)
+            {
+                cc.CameraShake(0.5f);
+            }
+
+            this.Die();
         }
 
         /// <summary>The mob died in Minecraft: no more hits, one last burst of blood, off the enemy list.</summary>

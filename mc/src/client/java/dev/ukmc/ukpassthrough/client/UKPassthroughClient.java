@@ -39,6 +39,8 @@ public class UKPassthroughClient implements ClientModInitializer {
 		UKPassthrough.v1Boost = MobHits::boosted;
 		UKPassthrough.boostedHit = Projectiles::boostedHit;
 		UKPassthrough.v1Windup = MobHits::windup;
+		UKPassthrough.v1Splat = MobHits::splatted;
+		UKPassthrough.v1Void = Respawn::fellOutOfWorld;
 		UKPassthrough.v1Feet = () -> {
 			V1State.Pose p = V1State.live();
 			return p == null ? null : new net.minecraft.world.phys.Vec3(p.fx(), p.fy(), p.fz());
@@ -55,6 +57,8 @@ public class UKPassthroughClient implements ClientModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(Launches::serverTick);
 		ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
 			Lag.tickStart();
+			// also with the HUD hidden (F1), whose frame hook below then doesn't run
+			HitStops.frame(minecraft);
 			Launches.clientTick(minecraft);
 			UkLink.get().tick();
 			Teleports.tick();
@@ -98,6 +102,7 @@ public class UKPassthroughClient implements ClientModInitializer {
 			UkLink link = UkLink.get();
 			Minecraft minecraft = Minecraft.getInstance();
 			Launches.frame();
+			HitStops.frame(minecraft);
 			Lag.frame();
 			DevDemo.frame(minecraft, deltaTracker.getGameTimeDeltaPartialTick(true));
 			if (!ModSettings.get().statusLine) {

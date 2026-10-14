@@ -82,6 +82,8 @@ namespace UKPassthrough
             GunControl gc = MonoSingleton<GunControl>.Instance;
             int slot = (int?)m["slot"] ?? 1;
             int variation = (int?)m["variation"] ?? 0;
+            // "alt": 0 the weapon itself, 1 its alternate (both have the variation's colour), absent either
+            int alt = (int?)m["alt"] ?? -1;
             if (gc == null || slot < 1 || slot > gc.slots.Count)
             {
                 Plugin.Log.LogWarning("render probe: no weapon slot " + slot);
@@ -89,7 +91,8 @@ namespace UKPassthrough
             }
 
             System.Collections.Generic.List<GameObject> list = gc.slots[slot - 1];
-            int index = list.FindIndex(w => w != null && WeaponVariation(w) == variation);
+            int index = list.FindIndex(w => w != null && WeaponVariation(w) == variation
+                && (alt < 0 || (w.TryGetComponent(out WeaponIdentifier id) && id.alternateVersion) == (alt != 0)));
             Plugin.Log.LogInfo("render probe: slot " + slot + " has " + string.Join(", ", list.Select(w => w == null ? "-" : w.name + " (" + WeaponVariation(w) + ")"))
                 + (index < 0 ? "; no variation " + variation : "; holding " + list[index].name));
             if (index >= 0)

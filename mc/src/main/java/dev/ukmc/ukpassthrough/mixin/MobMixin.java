@@ -1,5 +1,6 @@
 package dev.ukmc.ukpassthrough.mixin;
 
+import dev.ukmc.ukpassthrough.Knocked;
 import dev.ukmc.ukpassthrough.MeleeWindups;
 import dev.ukmc.ukpassthrough.MobReach;
 import dev.ukmc.ukpassthrough.UKPassthrough;
@@ -15,11 +16,14 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Mobs' melee against V1 (round 16): whether a mob reaches the player is measured from V1's newest position, with V1's shorter
  * reach ({@link MobReach}), and a hit on the player winds up before it lands ({@link MeleeWindups}). Only while V1 drives.
+ * A mob the Whiplash pulls is stunned (round 33, {@link Knocked}): its AI waits (goals, brain, path, steering), Minecraft's physics
+ * still move it.
  */
 @Mixin(Mob.class)
 abstract class MobMixin {
@@ -43,6 +47,13 @@ abstract class MobMixin {
 		double min = range == null ? 0.0 : range.effectiveMinRange(self);
 		double max = Math.max(min, (range == null ? MobReach.REACH : range.effectiveMaxRange(self)) * MobReach.v1Share);
 		cir.setReturnValue(this.getAttackBoundingBox(max).intersects(v1) && (min <= 0.0 || !this.getAttackBoundingBox(min).intersects(v1)));
+	}
+
+	@Inject(method = "serverAiStep", at = @At("HEAD"), cancellable = true)
+	private void ukpassthrough$stunned(final CallbackInfo ci) {
+		if (Knocked.stunned((Mob) (Object) this)) {
+			ci.cancel();
+		}
 	}
 
 	@Inject(method = "doHurtTarget", at = @At("HEAD"), cancellable = true)

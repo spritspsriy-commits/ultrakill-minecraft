@@ -193,6 +193,12 @@ namespace UKPassthrough
                 case "strike":
                     this.arena.Mobs.OnStrike(m);
                     break;
+                case "splat":
+                    this.arena.Mobs.OnSplat(m);
+                    break;
+                case "void":
+                    this.arena.OnVoid();
+                    break;
                 case "windup":
                     this.arena.Mobs.OnWindup(m);
                     break;
@@ -333,6 +339,31 @@ namespace UKPassthrough
                     else if ((string)m["what"] == "bossray")
                     {
                         EnemyKeeper.ProbeBossRay();
+                    }
+                    else if ((string)m["what"] == "bodyguns")
+                    {
+                        Round33Probe.BodyGuns();
+                    }
+                    else if ((string)m["what"] == "hitstop")
+                    {
+                        Round33Probe.HitStop(m);
+                    }
+                    else if ((string)m["what"] == "zap")
+                    {
+                        Round33Probe.Zap();
+                    }
+                    else if ((string)m["what"] == "arm")
+                    {
+                        Round33Probe.Arm(m);
+                    }
+                    else if ((string)m["what"] == "mobstate")
+                    {
+                        Round33Probe.MobState(this.arena.Mobs, m);
+                    }
+                    else if ((string)m["what"] == "sleep")
+                    {
+                        EnemyKeeper.SleepOn = ((int?)m["on"] ?? 1) != 0;
+                        Plugin.Log.LogInfo("enemies: sleeping far from V1 " + (EnemyKeeper.SleepOn ? "on" : "off (as before round 33)"));
                     }
                     else if ((string)m["what"] == "targets")
                     {

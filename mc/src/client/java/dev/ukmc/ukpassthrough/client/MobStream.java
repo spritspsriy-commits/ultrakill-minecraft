@@ -2,6 +2,7 @@ package dev.ukmc.ukpassthrough.client;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import dev.ukmc.ukpassthrough.Knocked;
 import dev.ukmc.ukpassthrough.UkEnemy;
 import java.util.List;
 import net.minecraft.client.Minecraft;
@@ -13,7 +14,9 @@ import net.minecraft.world.entity.player.Player;
  * The living things around the player go to ULTRAKILL every tick (20 a second), where each becomes an
  * invisible enemy V1 can hit: {"t":"mobs","m":[id, x, y, z, width, height, eye height, health, flags, ...]}, feet
  * position in blocks. Dying mobs come with health 0 until they're gone. Flags: 1 = on fire (it then lights ULTRAKILL's
- * gasoline), 2 = the Feedbacker uses it instead of hitting it ({@link Punches#usable}). Client thread.
+ * gasoline), 2 = the Feedbacker uses it instead of hitting it ({@link Punches#usable}), 4 = in the air off its feet (round 33:
+ * jumping, falling, launched or pulled; not one that flies, swims, climbs or rides), which ULTRAKILL's rockets go off bigger on, as
+ * on its own enemies in the air. Client thread.
  */
 final class MobStream {
 	/** About as far as V1 can reliably hit something. */
@@ -46,7 +49,7 @@ final class MobStream {
 			m.add(e.getBbHeight());
 			m.add(e.getEyeHeight());
 			m.add(e.isDeadOrDying() ? 0.0F : e.getHealth());
-			m.add((e.isOnFire() ? 1 : 0) | (Punches.usable(e, minecraft.player) ? 2 : 0));
+			m.add((e.isOnFire() ? 1 : 0) | (Punches.usable(e, minecraft.player) ? 2 : 0) | (Knocked.inAir(e.getId()) ? 4 : 0));
 		}
 
 		JsonObject message = UkLink.type("mobs");

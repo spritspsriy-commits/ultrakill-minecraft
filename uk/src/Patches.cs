@@ -66,6 +66,8 @@ namespace UKPassthrough
                     return true;
                 }
 
+                // electricity through its nails, magnets or water first (round 33): the hit clears what kind of hit it was
+                Mobs.Conduct(__instance, sourceWeapon);
                 s.Owner.Hit(s, target, force, multiplier, critMultiplier, sourceWeapon, fromExplosion);
                 return false;
             }
@@ -418,6 +420,12 @@ namespace UKPassthrough
         {
             private static bool Prefix(NewMovement __instance, ref int damage, bool invincible, bool ignoreInvincibility)
             {
+                if (Arena.VoidDeath)
+                {
+                    // the void: neither creative nor the totem saves V1 (round 33)
+                    return true;
+                }
+
                 if (Arena.Current != null && Arena.Current.Infighting.Creative)
                 {
                     return false;
@@ -551,6 +559,20 @@ namespace UKPassthrough
         private static class StandInExplode
         {
             private static bool Prefix(EnemyIdentifier __instance) => !__instance.TryGetComponent(out StandIn _);
+        }
+
+        /// <summary>ULTRAKILL's fire on a burning mob isn't drawn: Minecraft draws the mob's own flames (<see cref="Mobs.HideFire"/>).</summary>
+        [HarmonyPatch(typeof(Flammable), nameof(Flammable.Burn))]
+        private static class NoFireSpriteOnMobs
+        {
+            private static void Postfix(Flammable __instance) => Mobs.HideFire(__instance);
+        }
+
+        /// <summary>A fire going back to ULTRAKILL's pool is drawn again for whatever it burns next.</summary>
+        [HarmonyPatch(typeof(FireObjectPool), nameof(FireObjectPool.ReturnFire))]
+        private static class FireBackToPool
+        {
+            private static void Prefix(GameObject fireObject) => Mobs.ShowFire(fireObject);
         }
 
         [HarmonyPatch(typeof(EnemyIdentifier), nameof(EnemyIdentifier.InstaKill))]

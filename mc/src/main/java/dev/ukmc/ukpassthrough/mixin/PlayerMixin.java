@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * "in a wall", so that doesn't suffocate Steve either.
  * <p>
  * And the player's damage goes to V1: Steve's health stays full. Damage V1 doesn't take in ULTRAKILL (falling, drowning,
- * starving, the void, being squeezed into blocks) is dropped. The rest goes through Minecraft's own steps first, as it
+ * starving, being squeezed into blocks) is dropped; the void kills V1 outright (round 33). The rest goes through Minecraft's own steps first, as it
  * would for Steve: armor (which wears it), Resistance and protection enchantments, then absorption hearts (golden
  * apples, the totem). Poison's damage is marked as unable to kill.
  * <p>
@@ -112,9 +112,18 @@ abstract class PlayerMixin {
 		}
 
 		ci.cancel();
+		if (source.is(DamageTypes.FELL_OUT_OF_WORLD)) {
+			// the void kills V1 as it kills Steve, creative or not, totem or not (round 33: V1 fell on through it for ever)
+			Runnable fell = UKPassthrough.v1Void;
+			if (fell != null) {
+				fell.run();
+			}
+
+			return;
+		}
+
 		if (source.is(DamageTypes.FALL) || source.is(DamageTypes.DROWN) || source.is(DamageTypes.STARVE) || source.is(DamageTypes.IN_WALL)
-			|| source.is(DamageTypes.CRAMMING) || source.is(DamageTypes.FLY_INTO_WALL) || source.is(DamageTypes.FELL_OUT_OF_WORLD)
-			|| player.isInvulnerableTo(level, source)) {
+			|| source.is(DamageTypes.CRAMMING) || source.is(DamageTypes.FLY_INTO_WALL) || player.isInvulnerableTo(level, source)) {
 			return;
 		}
 

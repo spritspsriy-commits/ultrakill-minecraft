@@ -25,7 +25,7 @@ import org.java_websocket.server.WebSocketServer;
  * The link counts as lost after 3 seconds without any message.
  */
 public final class UkLink extends WebSocketServer {
-	public static final int PROTOCOL = 29;
+	public static final int PROTOCOL = 30;
 	private static final long TIMEOUT_NANOS = 3_000_000_000L;
 	private static final long PING_EVERY_NANOS = 1_000_000_000L;
 	private static UkLink instance;
@@ -217,6 +217,7 @@ public final class UkLink extends WebSocketServer {
 				case "armout" -> V1Hand.onArmOut(m);
 				case "ukprefs" -> ModSettings.onUkPrefs(m);
 				case "speed" -> GameSpeed.onSpeed(m);
+				case "stop" -> HitStops.onStop(m);
 				case "binds" -> ControlsScreen.onBinds(m);
 				case "loadoutset" -> ModSettings.onLoadoutSet(m);
 				case "spend" -> Progression.onSpend(m);

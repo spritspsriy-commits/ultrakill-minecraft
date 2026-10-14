@@ -53,6 +53,8 @@ namespace UKPassthrough
         private const int LimbLayer = 10;
 
         private static readonly int ColorId = Shader.PropertyToID("_Color");
+        /// <summary>The gun colours ULTRAKILL's GunColorGetter puts in a gun's renderer-wide property block (custom colours and presets).</summary>
+        private static readonly int[] GunColorIds = { Shader.PropertyToID("_CustomColor1"), Shader.PropertyToID("_CustomColor2"), Shader.PropertyToID("_CustomColor3") };
         /// <summary>Set by the patch on ULTRAKILL's step climbing: V1 was lifted and its camera left behind to glide up.</summary>
         private static bool climbed;
 
@@ -63,7 +65,7 @@ namespace UKPassthrough
         /// <summary>V1's body renderers that have Minecraft's light on them, until they're put back.</summary>
         private readonly List<Renderer> tinted = new List<Renderer>();
         private readonly MaterialPropertyBlock tint = new MaterialPropertyBlock();
-        private readonly MaterialPropertyBlock none = new MaterialPropertyBlock();
+        private readonly MaterialPropertyBlock whole = new MaterialPropertyBlock();
         private int bodyLayer = -1;
         private int viewModelLayer = -1;
         private Camera moved;
@@ -396,10 +398,16 @@ namespace UKPassthrough
             }
         }
 
-        /// <summary>The material colour is what the light falls on; the glow (the wings' yellow) is apart from it and stays as bright.</summary>
+        /// <summary>
+        /// The material colour is what the light falls on; the glow (the wings' yellow) is apart from it and stays as bright. A material's own
+        /// property block takes the place of the renderer's (Unity uses one or the other), and the gun V1's body holds has its colours in
+        /// the renderer's (GunColorGetter: custom colours and presets): they're carried over, or the gun was drawn plain white in third
+        /// person (round 33, a player's report: "Weapon textures (like the players weapon skin) does not show when v1 is in third person").
+        /// </summary>
         private void Tint(Renderer r, Color light)
         {
             Material[] materials = r.sharedMaterials;
+            r.GetPropertyBlock(this.whole);
             for (int i = 0; i < materials.Length; i++)
             {
                 Material m = materials[i];
@@ -407,6 +415,14 @@ namespace UKPassthrough
                 {
                     r.GetPropertyBlock(this.tint, i);
                     this.tint.SetColor(ColorId, m.GetColor(ColorId) * light);
+                    foreach (int id in GunColorIds)
+                    {
+                        if (this.whole.HasColor(id))
+                        {
+                            this.tint.SetColor(id, this.whole.GetColor(id));
+                        }
+                    }
+
                     r.SetPropertyBlock(this.tint, i);
                 }
             }
@@ -427,9 +443,10 @@ namespace UKPassthrough
             {
                 if (r != null)
                 {
+                    // the material's own blocks go (null clears them), and the renderer's applies again
                     for (int i = 0; i < r.sharedMaterials.Length; i++)
                     {
-                        r.SetPropertyBlock(this.none, i);
+                        r.SetPropertyBlock(null, i);
                     }
                 }
             }

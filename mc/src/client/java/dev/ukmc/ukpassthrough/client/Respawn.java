@@ -22,7 +22,25 @@ import net.minecraft.world.level.portal.TeleportTransition;
  * V1, once the ground there has arrived. Steve never dies himself: V1 takes his damage.
  */
 final class Respawn {
+	/** When V1 was last told it fell out of the world (System.nanoTime; the void hurts every tick it's down there). */
+	private static long voidSentAt;
+
 	private Respawn() {
+	}
+
+	/**
+	 * Server thread (PlayerMixin): the player is in the void under the world while V1 drives (round 33, a player's report: "when the player
+	 * falls into the void the game freaks out a bit"): V1 dies there as Steve would ({"t":"void"}), at most once a second.
+	 */
+	static void fellOutOfWorld() {
+		long now = System.nanoTime();
+		if (now - voidSentAt < 1_000_000_000L || UKPassthrough.v1Dead) {
+			return;
+		}
+
+		voidSentAt = now;
+		UkLink.get().send(UkLink.type("void"));
+		UKPassthrough.LOG.info("the player fell out of the world: V1 dies, as Steve would");
 	}
 
 	/** From the link thread. */

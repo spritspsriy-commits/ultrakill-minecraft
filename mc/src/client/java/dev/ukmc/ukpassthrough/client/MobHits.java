@@ -2,6 +2,7 @@ package dev.ukmc.ukpassthrough.client;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import dev.ukmc.ukpassthrough.Knocked;
 import dev.ukmc.ukpassthrough.MeleeWindups;
 import dev.ukmc.ukpassthrough.UKPassthrough;
 import dev.ukmc.ukpassthrough.UkEnemy;
@@ -149,6 +150,10 @@ final class MobHits {
 			// ULTRAKILL's own knockback on top of Minecraft's: explosions and heavy punches launch mobs (an enemy's melee has Minecraft's)
 			if (push.lengthSqr() > 1.0E-4 && (by == null || explosion || attacker == null)) {
 				living.push(push.x, push.y, push.z);
+				// V1's own: the mob may splatter where it lands (round 33)
+				if (by == null) {
+					Knocked.pushed(living, push, server.getTickCount());
+				}
 			}
 
 			if (by != null) {
@@ -187,6 +192,7 @@ final class MobHits {
 			if (!players.isEmpty() && players.getFirst().level().getEntity(id) instanceof LivingEntity living && living.isAlive()) {
 				living.push(push.x, push.y, push.z);
 				Launches.pushed(server, living);
+				Knocked.pushed(living, push, server.getTickCount());
 				UKPassthrough.LOG.info("mob {} launched by ULTRAKILL: {} {} {} blocks a tick (link {}, pushed {} ms later)", id, String.format(java.util.Locale.ROOT, "%.2f", push.x),
 					String.format(java.util.Locale.ROOT, "%.2f", push.y), String.format(java.util.Locale.ROOT, "%.2f", push.z), heard, System.currentTimeMillis() - heard);
 			}
@@ -234,6 +240,15 @@ final class MobHits {
 		living.needsSync = true;
 		// carried, not falling
 		living.resetFallDistance();
+		// stunned meanwhile and until it has landed, as ULTRAKILL's husks (round 33)
+		Knocked.pulled(living, server.getTickCount());
+	}
+
+	/** Server thread (Knocked): a light mob V1 knocked into the air landed hard and died of it: ULTRAKILL's splatter there (round 33). */
+	static void splatted(final LivingEntity mob) {
+		JsonObject m = UkLink.type("splat");
+		m.addProperty("id", mob.getId());
+		UkLink.get().send(m);
 	}
 
 	/** Server thread (LivingEntityMixin): the player's own weapon hurt a mob while V1 drives. */

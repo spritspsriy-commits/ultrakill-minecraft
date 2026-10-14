@@ -14,7 +14,7 @@ namespace UKPassthrough
     /// </summary>
     internal sealed class Link : IDisposable
     {
-        public const int Protocol = 29;
+        public const int Protocol = 30;
         private const int TimeoutMs = 3000;
 
         private readonly string host;

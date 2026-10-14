@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 public class UKPassthrough implements ModInitializer {
 	public static final String ID = "ukpassthrough";
-	public static final String VERSION = "0.1.2";
+	public static final String VERSION = "0.1.3";
 	public static final Logger LOG = LoggerFactory.getLogger(ID);
 	/**
 	 * True while V1 moves the player (the client sets it every tick). The integrated server runs in this JVM, so
@@ -65,6 +65,13 @@ public class UKPassthrough implements ModInitializer {
 	 * ULTRAKILL's own hits on mobs (MobHits) are the player's attacks too, but don't run through it. Server thread.
 	 */
 	public static Player striking;
+	/**
+	 * The player fell out of the world (the void's damage, 64 blocks under its bottom) while V1 drives: V1 dies, as Steve would (round 33;
+	 * set by the client, called on the server thread every tick it's down there).
+	 */
+	public static volatile Runnable v1Void;
+	/** Where a mob V1 splattered goes, for ULTRAKILL's splatter and "SPLATTERED" ({@link Knocked}; set by the client, called on the server thread). */
+	public static volatile V1Splat v1Splat;
 	/** Where hurts on ULTRAKILL's enemies in Minecraft ({@link UkEnemy}) go (set by the client, called on the server thread). */
 	public static volatile UkEnemyHurt ukEnemyHurt;
 	/** True while an experience orb gives the player its points (ExperienceOrbMixin). Server thread. */
@@ -117,6 +124,11 @@ public class UKPassthrough implements ModInitializer {
 		void hit(net.minecraft.world.entity.projectile.Projectile projectile, net.minecraft.world.phys.Vec3 at);
 	}
 
+	/** A light mob V1 knocked into the air landed hard and died of it ({@link Knocked}). */
+	public interface V1Splat {
+		void splat(LivingEntity mob);
+	}
+
 	/** A mob's melee hit on V1 is winding up (MeleeWindups): ULTRAKILL shows it can be parried. */
 	public interface V1Windup {
 		/** @param ms how long until it lands */
@@ -139,6 +151,7 @@ public class UKPassthrough implements ModInitializer {
 	public void onInitialize() {
 		LOG.info("ULTRAKILL passthrough {} loaded", VERSION);
 		ServerTickEvents.END_SERVER_TICK.register(MeleeWindups::tick);
+		ServerTickEvents.END_SERVER_TICK.register(Knocked::tick);
 		UkEnemy.register();
 		PlacedBlocks.register();
 	}

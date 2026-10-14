@@ -107,4 +107,9 @@ public final class MeleeWindups {
 	public static boolean parried(final int id) {
 		return PENDING.remove(id) != null;
 	}
+
+	/** Mob {@code id} was knocked off its feet mid-windup (the Whiplash, {@link Knocked}): that hit doesn't land. False if it had none. */
+	public static boolean interrupted(final int id) {
+		return PENDING.remove(id) != null;
+	}
 }
