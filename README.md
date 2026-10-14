@@ -17,6 +17,7 @@ weapons, the arms and the HUD. Minecraft supplies the world, the blocks and the 
 - **Third person** (F5), with V1's animated body.
 - **A settings menu** in Minecraft's pause menu: Progression Mode (earn P from experience and buy your guns), a
   Balance page, Safe Building, Potato Mode and more.
+- **Cybergrind Mode** if you want the cybergrind mode in minecraft, check out somegoodstew's cybergrind mod here! :https://github.com/somegoodstew/Cybergrind-mod
 
 > Status: **0.1.3, an early release.** It's played and tested, but expect bugs. Please report them (see
 > [Reporting a bug](#reporting-a-bug)).
@@ -34,7 +35,8 @@ weapons, the arms and the HUD. Minecraft supplies the world, the blocks and the 
   over the internet.
 
 Both games are needed because nothing from them is included here. A game update can break the mod until it's
-updated too.
+updated too. I can not officially support cracked versions of Minecraft and ULTRAKILL, and I do not know if the mod will
+work on them.
 
 ### PC specs
 
