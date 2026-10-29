@@ -19,13 +19,12 @@ weapons, the arms and the HUD. Minecraft supplies the world, the blocks and the 
   Balance page, Safe Building, Potato Mode and more.
 - **Cybergrind Mode** if you want the cybergrind mode in minecraft, check out somegoodstew's cybergrind mod here! :https://github.com/somegoodstew/Cybergrind-mod
 
-> Status: **0.1.3, an early release.** It's played and tested, but expect bugs. Please report them (see
-> [Reporting a bug](#reporting-a-bug)).
-
+> Status: My own version.
+WORKING.
 ## What you need
 
 - **Windows.** It hasn't been made for Mac or Linux.
-- **Minecraft: Java Edition 26.3** with **Fabric Loader** 0.19.3 or newer and **Fabric API** for 26.3.
+- **Minecraft: Java Edition 1.20.1* with **Fabric Loader** 0.19.3 or newer and **Fabric API** for 1.20.1.
 - **ULTRAKILL** on Steam with **BepInEx 5**. It was tested with the Steam version of October 2026 (build
   22957324).
 - **An ULTRAKILL save that has finished the tutorial and has the Revolver**, the first pistol. Without it, the mod
@@ -75,30 +74,30 @@ Download the two files from the [Releases page](https://github.com/xandermodsstu
 ### Part 1: Minecraft
 
 Follow the steps for the launcher you play Minecraft with: **A** the official Minecraft Launcher, **B** the Modrinth App,
-or **C** the CurseForge app. In all three, the mod needs Minecraft **26.3** with **Fabric** and **Fabric API**. This mod's
+or **C** the CurseForge app. In all three, the mod needs Minecraft **1.20.1** with **Fabric** and **Fabric API**. This mod's
 own file isn't on Modrinth or CurseForge, so with those apps you add it by hand.
 
 **A. With the Minecraft Launcher**
 
-1. Start the Minecraft Launcher and play Minecraft 26.3 once, then close it. That makes the game's folders.
+1. Start the Minecraft Launcher and play Minecraft 1.20.1 once, then close it. That makes the game's folders.
 2. Download the **Fabric Installer** from [fabricmc.net/use/installer](https://fabricmc.net/use/installer/) and run
-   it. On the **Client** tab, choose Minecraft version **26.3**, leave the loader at the newest version, and click
+   it. On the **Client** tab, choose Minecraft version **1.20.1**, leave the loader at the newest version, and click
    **Install**.
-3. Download **Fabric API** for 26.3 from [modrinth.com/mod/fabric-api](https://modrinth.com/mod/fabric-api)
-   (open its **Versions** tab and pick one marked 26.3).
+3. Download **Fabric API** for 1.20.1 from [modrinth.com/mod/fabric-api](https://modrinth.com/mod/fabric-api)
+   (open its **Versions** tab and pick one marked 1.20.1).
 4. Open your mods folder. Press **Windows key + R**, type `%appdata%\.minecraft\mods` and press Enter. If Windows
    says it doesn't exist, open `%appdata%\.minecraft` instead and make a folder called `mods` there.
 5. Put both jars in the mods folder: Fabric API and `ukpassthrough-0.1.3.jar`.
-6. In the Minecraft Launcher, choose **fabric-loader-…-26.3** in the list next to the Play button.
+6. In the Minecraft Launcher, choose **fabric-loader-…-1.20.1** in the list next to the Play button.
 
 **B. With the Modrinth App**
 
 1. Install the [Modrinth App](https://modrinth.com/app), open it, and sign in with the Microsoft account you play
    Minecraft with.
 2. Click **+** (create an instance) in the left-hand bar. Give it a name (for example "ULTRAKILL"), choose **Fabric**
-   as the loader and **26.3** as the game version, leave the loader version as it is, and click **Create**.
+   as the loader and **1.20.1** as the game version, leave the loader version as it is, and click **Create**.
 3. Open the new instance and click **Add content** (in some versions **Install content**). Search for
-   **Fabric API** and click **Install**. The app picks the version for 26.3 by itself.
+   **Fabric API** and click **Install**. The app picks the version for 1.20.1 by itself.
 4. Open the instance's folder: on the instance's page, click the **⋮** (three dots) button and choose
    **Open folder**. Open the `mods` folder in it. If there's none, make a folder called `mods`.
 5. Put `ukpassthrough-0.1.3.jar` in that `mods` folder.
@@ -107,7 +106,7 @@ own file isn't on Modrinth or CurseForge, so with those apps you add it by hand.
 **C. With the CurseForge app**
 
 1. Install the [CurseForge app](https://www.curseforge.com/download/app), open it, and choose **Minecraft**.
-2. Click **Create Custom Profile** (in some versions **+ Create**). Give it a name, choose **26.3** as the Minecraft
+2. Click **Create Custom Profile** (in some versions **+ Create**). Give it a name, choose **1.20.1** as the Minecraft
    version and **Fabric** as the mod loader, leave the loader version as it is, and click **Create**.
 3. Open the new profile and click **Add More Content**. Search for **Fabric API** and click **Install**.
 4. Open the profile's folder: click the **⋮** (three dots) button next to **Play** and choose **Open Folder**.
@@ -186,6 +185,7 @@ ULTRAKILL. Besides those:
 | **6** | the Sandbox arm, in creative (spawn ULTRAKILL's enemies, destroy, move) |
 | **Home** or **`** | ULTRAKILL's cheats menu, in creative |
 | **Esc** | Minecraft's pause menu, with the **ULTRAKILL x Minecraft Settings** button |
+| **F8** | Opens Boss Fight Menu (IN SPANISH). |
 | `/uk` (in chat) | says whether ULTRAKILL is connected and where V1 is |
 
 The settings menu has a **Controls Guide...** that lists every key with your own ULTRAKILL bindings.
@@ -234,7 +234,7 @@ Esc, then **ULTRAKILL x Minecraft Settings**:
   and have the Revolver. Play ULTRAKILL without the mod until you have it, then try again. With r2modman, start
   ULTRAKILL from Steam instead of Start modded. If you installed by hand, take `UKPassthrough.dll` out of `plugins`
   first.
-- **Minecraft doesn't start.** Check that Fabric API is a version for 26.3, that you picked the Fabric version in the
+- **Minecraft doesn't start.** Check that Fabric API is a version for 1.201, that you picked the Fabric version in the
   launcher, and that there's only one `ukpassthrough-….jar` in the `mods` folder. Minecraft's log is `logs\latest.log`
   in its game folder: `%appdata%\.minecraft` for the Minecraft Launcher, or your instance's or profile's folder in the
   Modrinth App or CurseForge.
